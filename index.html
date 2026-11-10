@@ -352,6 +352,10 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hobox p{margin:0;color:var(--muted);line-height:1.6;font-size:14px}
 .hobox p b{color:var(--ink)}
 .hobox .hosub{font-size:12px}
+.assignbox{background:var(--card-soft);border-radius:10px;padding:10px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+.assignbox p{margin:0;font-size:12.5px;line-height:1.55}
+.assignbox b{color:var(--card)}
+.assignrow{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:start}
 /* inbox */
 .inbar{display:flex;align-items:center;gap:8px;width:100%;background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:10px 12px;font-weight:700;font-size:13px;color:var(--ink);text-align:left}
 .inbar .n{background:var(--accent-text);color:var(--surface);border-radius:99px;padding:0 8px;font-size:12px}
@@ -589,6 +593,10 @@ html.locked .wrap{visibility:hidden}
     <details class="panel fold" id="foldCards">
       <summary><span>3. 내 카드 등록<span class="sumtag" id="cardTag"></span></span></summary>
       <div class="fold-body">
+        <div class="assignbox" id="assignBox" hidden>
+          <p>카드가 지정되지 않은 내 카드 내역이 <b id="assignCount">0</b>건 있어요. 카드 구분을 만들기 전에 입력한 내역이에요.</p>
+          <div class="assignrow"><div><select class="f" id="assignCard" aria-label="지정할 카드"></select></div><button type="button" class="sbtn pri" id="assignBtn">모두 이 카드로 지정</button></div>
+        </div>
         <div class="clist" id="cardList"></div>
         <form class="cardform" id="cardForm" autocomplete="off">
           <h3 class="lfh" id="cardFormTitle">새 카드 등록</h3>
@@ -2277,9 +2285,18 @@ html.locked .wrap{visibility:hidden}
     }
     return row;
   }
+  const unassigned=()=>entries.filter(e=>isMine(e)&&e.pay==="card"&&!cardOf(e.card));
   function renderCardsSettings(){
     const L=$("cardList"); L.innerHTML="";
     const mine=myCards();
+    const un=unassigned(), AB=$("assignBox");
+    AB.hidden=!(un.length&&mine.length);
+    if(!AB.hidden){
+      $("assignCount").textContent=un.length;
+      const S=$("assignCard"), keep=S.value; S.innerHTML="";
+      mine.forEach(c=>{ const o=el("option",null,c.alias===c.company?c.alias:c.alias+" ("+c.company+")"); o.value=c.id; S.appendChild(o); });
+      if(mine.some(c=>c.id===keep)) S.value=keep;
+    }
     $("cardTag").textContent=mine.length?mine.length+"장":"";
     if(!mine.length) L.appendChild(el("div","hint","등록한 카드가 없어요. 아래에서 카드를 등록해 보세요."));
     mine.forEach(c=>L.appendChild(cardRow(c,true)));
@@ -2304,6 +2321,15 @@ html.locked .wrap{visibility:hidden}
     cardConfirm=null; if(cardEdit===id){ cardEdit=null; fillCardForm(null); }
     commitCards(); renderCardsSettings(); toast("카드를 지웠어요");
   }
+  $("assignBtn").addEventListener("click",()=>{
+    const id=$("assignCard").value, c=cardOf(id); if(!c) return;
+    const list=unassigned(); if(!list.length) return;
+    list.forEach(e=>{ e.card=id; });
+    persist();
+    if(cloudOn) list.forEach(e=>queue({t:"up",row:toRow(e)}));
+    renderCardsSettings(); render();
+    toast(list.length+"건을 '"+c.alias+"'로 지정했어요");
+  });
   $("cfCancel").addEventListener("click",()=>{ cardEdit=null; fillCardForm(null); renderCardsSettings(); });
   $("cardForm").addEventListener("submit",ev=>{
     ev.preventDefault();
@@ -2584,7 +2610,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-17";
+  var APP_VERSION="2026.11.11-18";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
