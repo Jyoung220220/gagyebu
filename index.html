@@ -11,7 +11,13 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+.updbar{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:50;
+  max-width:520px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 14px;border-radius:14px;background:var(--ink,#18231f);color:var(--bg,#fff);
+  box-shadow:0 8px 28px rgba(0,0,0,.25);font-size:13px}
+.updbar span{flex:1}
+.updbar button{border:0;border-radius:10px;padding:8px 14px;font-weight:700;font-size:13px;background:var(--accent,#9ed8c5);color:var(--accent-ink,#1f3b33);cursor:pointer}
+.updbar .x{background:transparent;color:inherit;opacity:.7;padding:8px 6px;font-weight:500}</style>
 </head>
 <body>
 <title>우리집 가계부</title>
@@ -1573,8 +1579,45 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 })();
 </script>
 
+<div class="updbar" id="updBar" role="status" hidden>
+  <span id="updMsg">새 버전이 나왔어요. 새로고침하면 바로 적용돼요.</span>
+  <button type="button" class="x" id="updLater">나중에</button>
+  <button type="button" id="updBtn">새로고침</button>
+</div>
 <script>
-if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+(function(){
+  var APP_VERSION="2026.11.11-1";
+  var bar=document.getElementById("updBar");
+  var reg=null;
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").then(function(r){reg=r;}).catch(function(){}); });
+  }
+  function check(){
+    fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.version&&j.version!==APP_VERSION){
+        document.getElementById("updMsg").textContent="새 버전이 나왔어요"+(j.note?" ("+j.note+")":"")+". 새로고침하면 바로 적용돼요.";
+        bar.hidden=false;
+      }
+    }).catch(function(){});
+  }
+  document.getElementById("updBtn").addEventListener("click",function(){
+    try{ sessionStorage.setItem("gagyebu.updated","1"); }catch(e){}
+    var go=function(){ location.reload(); };
+    if(reg){ reg.update().then(go,go); } else go();
+  });
+  document.getElementById("updLater").addEventListener("click",function(){ bar.hidden=true; });
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible") check(); });
+  window.addEventListener("online",check);
+  setInterval(check,5*60*1000);
+  setTimeout(check,1500);
+  try{
+    if(sessionStorage.getItem("gagyebu.updated")){
+      sessionStorage.removeItem("gagyebu.updated");
+      var t=document.getElementById("toast");
+      if(t){ t.textContent="업데이트되었습니다"; t.hidden=false; setTimeout(function(){t.hidden=true;},2200); }
+    }
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
