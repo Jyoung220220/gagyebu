@@ -293,7 +293,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .pk-foot{display:flex;gap:6px;margin-top:12px}
 .pk-foot button{flex:1;height:36px;border-radius:10px;border:1px solid var(--line);background:transparent;font-weight:600}
 .pk-foot .today{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:99px;z-index:40;max-width:calc(100% - 40px);white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:99px;z-index:40;max-width:calc(100% - 40px);width:max-content;white-space:normal;text-align:center;line-height:1.45}
 /* cards */
 .paywrap{position:relative}
 .fwrap{position:relative;display:inline-flex}
@@ -325,6 +325,18 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .cardform{border-top:1px solid var(--line);padding-top:10px;margin-top:8px}
 .cfgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
 .lbl2{font-size:11px;color:var(--muted);margin-bottom:3px}
+#authErr{flex-wrap:nowrap;align-items:flex-start;line-height:1.55}
+#authErr::before{margin-top:6px}
+.pwgrid{display:grid;grid-template-columns:1fr;gap:6px;margin:4px 0 10px}
+.pwgrid .sbtn{width:100%}
+.hodone{position:fixed;inset:0;z-index:120;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.hodone[hidden]{display:none}
+.hobox{max-width:320px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.hoicon{font-size:44px}
+.hobox h2{margin:0;font-size:18px}
+.hobox p{margin:0;color:var(--muted);line-height:1.6;font-size:14px}
+.hobox p b{color:var(--ink)}
+.hobox .hosub{font-size:12px}
 /* inbox */
 .inbar{display:flex;align-items:center;gap:8px;width:100%;background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:10px 12px;font-weight:700;font-size:13px;color:var(--ink);text-align:left}
 .inbar .n{background:var(--accent-text);color:var(--surface);border-radius:99px;padding:0 8px;font-size:12px}
@@ -607,14 +619,11 @@ html.locked .wrap{visibility:hidden}
           <div class="sstat err" id="authErr" hidden></div>
           <p class="help">로그인하면 내역이 서버에 안전하게 저장되고, 배우자와 실시간으로 함께 볼 수 있어요. 휴대폰을 바꿔도 내역이 그대로예요.</p>
           <button type="button" class="gbtn" id="gLogin"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>구글로 로그인</button>
-          <p class="help" style="margin-top:12px">구글 로그인이 안 되면 이메일로 받은 코드로 로그인할 수 있어요.</p>
-          <form class="pair" id="otpForm" autocomplete="off">
-            <input class="f" id="otpEmail" type="email" placeholder="이메일 주소" aria-label="이메일 주소" enterkeyhint="send">
-            <button type="submit" class="sbtn pri">코드 받기</button>
-          </form>
-          <form class="pair" id="otpVerify" autocomplete="off" hidden style="margin-top:6px">
-            <input class="f" id="otpCode" inputmode="numeric" placeholder="메일로 받은 코드" aria-label="메일로 받은 코드" enterkeyhint="done" autocomplete="one-time-code">
-            <button type="submit" class="sbtn pri">로그인</button>
+          <p class="help" style="margin-top:14px"><b>구글 로그인이 잘 안 될 때</b> · 구글 계정 이메일과 <b>앱용 비밀번호</b>로도 로그인할 수 있어요. 비밀번호는 구글로 로그인된 사파리나 PC에서 <b>4. 함께 쓰기 → 앱용 비밀번호</b>로 먼저 만들어 주세요.</p>
+          <form class="pwgrid" id="pwLoginForm">
+            <div><input class="f" id="pwEmail" type="email" placeholder="구글 계정 이메일" autocomplete="username" aria-label="이메일" enterkeyhint="next"></div>
+            <div><input class="f" id="pwPass" type="password" placeholder="앱용 비밀번호" autocomplete="current-password" aria-label="앱용 비밀번호" enterkeyhint="go"></div>
+            <button type="submit" class="sbtn pri">이메일로 로그인</button>
           </form>
         </div>
         <div id="syncIn" hidden>
@@ -622,6 +631,13 @@ html.locked .wrap{visibility:hidden}
           <div class="row-btns" id="retryRow" hidden style="margin:-4px 0 10px"><button type="button" id="retryBtn">다시 연결하기</button></div>
           <div class="srow2"><span class="lbl">내 이름</span>
             <form class="pair" id="nameForm" autocomplete="off"><input class="f" id="myName" maxlength="10" placeholder="예: 아내" aria-label="내 이름" enterkeyhint="done"><button type="submit" class="sbtn">저장</button></form></div>
+          <div class="srow2"><span class="lbl">앱용 비밀번호</span><div><button type="button" class="sbtn" id="pwOpen">만들기 · 바꾸기</button></div></div>
+          <form class="pwgrid" id="pwSetForm" autocomplete="off" hidden>
+            <div><input class="f" id="pwNew" type="password" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password" aria-label="새 비밀번호" enterkeyhint="next"></div>
+            <div><input class="f" id="pwNew2" type="password" placeholder="한 번 더" autocomplete="new-password" aria-label="비밀번호 확인" enterkeyhint="done"></div>
+            <button type="submit" class="sbtn pri">비밀번호 저장</button>
+            <p class="help" style="margin:0">홈 화면 앱처럼 구글 로그인이 안 되는 곳에서는 <b>구글 계정 이메일 + 이 비밀번호</b>로 로그인할 수 있어요. 내역은 같은 계정이라 그대로 이어져요.</p>
+          </form>
           <div class="srow2"><span class="lbl">함께 쓰는 사람</span><div class="mlist" id="mList"></div></div>
           <div class="srow2"><span class="lbl">내 초대 코드</span><div class="codebox"><b class="num" id="myCode">-</b><button type="button" class="sbtn" id="copyCode">복사</button></div></div>
           <p class="help">배우자가 자기 앱의 설정 → 함께 쓰기 → 초대 코드 입력에 이 코드를 넣으면 연결돼요.</p>
@@ -740,6 +756,14 @@ html.locked .wrap{visibility:hidden}
       <button type="button" id="pkClose">닫기</button>
       <button type="button" class="today" id="pkToday">오늘</button>
     </div>
+  </div>
+</div>
+<div class="hodone" id="hoDone" hidden>
+  <div class="hobox">
+    <div class="hoicon">✅</div>
+    <h2 id="hoTitle">구글 로그인이 끝났어요</h2>
+    <p id="hoText">홈 화면의 <b>가계부 앱으로 돌아가 주세요.</b><br>위쪽 <b>완료</b>를 누르거나, 홈 화면에서 가계부 앱을 다시 열면 자동으로 로그인돼요.</p>
+    <p class="hosub">이 창은 닫으셔도 돼요.</p>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -1772,10 +1796,50 @@ html.locked .wrap{visibility:hidden}
     cloudOn=false; cloudReady=false; me=null; hh=null; members=[]; outbox=[]; who="me"; statsWho="me";
     entries=own; cards=myK; persist(); refreshSelects(); inbox=[]; renderInbox();
   }
+  // 아이폰 홈 화면 앱용 구글 로그인: 로그인이 끝난 창에서 "로그인 확인 번호"를 서버에 맡기고, 앱이 찾아가요
+  const HOKEY="gagyebu.handoff";
+  const HO_Q=new URLSearchParams(location.search), HO_ID=HO_Q.get("handoff"), HO_CODE=HO_Q.get("code");
+  let hoTimer=null;
+  async function finishHandoffHere(){
+    // 로그인이 끝나고 돌아온 창
+    history.replaceState(null,"",location.pathname);
+    const mine=loadJSON(HOKEY);
+    const hasVerifier=!!lsGet(SB_SESSION+"-code-verifier");
+    if(mine&&mine.id===HO_ID&&hasVerifier){
+      lsDel(HOKEY);
+      const r=await sb.auth.exchangeCodeForSession(HO_CODE);
+      if(r.error){ showAuthErr(r.error.message); return; }
+      startCloud(r.data.user); return;
+    }
+    const r=await sb.rpc("handoff_put",{p_id:HO_ID,p_code:HO_CODE});
+    if(r.error){
+      $("hoTitle").textContent="로그인 정보를 앱에 전달하지 못했어요";
+      $("hoText").textContent=errMsg(r.error)+" 앱으로 돌아가 다시 시도해 주세요.";
+    }
+    $("hoDone").hidden=false;
+  }
+  async function checkHandoff(){
+    const h=loadJSON(HOKEY); if(!h||!sb) return;
+    if(Date.now()-h.t>12*60e3||cloudOn){ lsDel(HOKEY); return; }
+    const r=await sb.rpc("handoff_take",{p_id:h.id});
+    if(r.error||!r.data) return;
+    lsDel(HOKEY);
+    const x=await sb.auth.exchangeCodeForSession(r.data);
+    if(x.error){ showAuthErr(x.error.message); return; }
+    toast("구글 로그인이 됐어요");
+    startCloud(x.data.user);
+  }
+  function startHandoffWatch(){
+    if(hoTimer) return;
+    hoTimer=setInterval(()=>{ if(!loadJSON(HOKEY)){ clearInterval(hoTimer); hoTimer=null; return; } checkHandoff(); },3000);
+  }
+  window.addEventListener("focus",checkHandoff);
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") checkHandoff(); });
+
   async function initCloud(){
     if(!canCloud){ renderSync(); return; }
     try{
-      sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce"}});
+      sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:!HO_ID,flowType:"pkce"}});
     }catch(e){ sb=null; renderSync(); return; }
     sb.auth.onAuthStateChange((ev,s)=>{
       if(s&&s.user&&(ev==="SIGNED_IN"||ev==="INITIAL_SESSION")) setTimeout(()=>startCloud(s.user),0);
@@ -1786,8 +1850,10 @@ html.locked .wrap{visibility:hidden}
     try{ const r=await sb.auth.getSession(); session=r.data&&r.data.session; if(r.error&&!authErr) authErr=r.error.message||String(r.error); }catch(e){ if(!authErr) authErr=String(e&&e.message||e); }
     if(/[?&](code|error)=/.test(location.search)||/error=/.test(location.hash)) history.replaceState(null,"",location.pathname);
     if(authErr&&!session) showAuthErr(authErr);
+    if(HO_ID&&HO_CODE&&!session){ renderSync(); finishHandoffHere(); return; }
     if(session) startCloud(session.user);
     else if(cloudOn){ goLocal(); render(); }
+    if(!session&&loadJSON(HOKEY)){ checkHandoff(); startHandoffWatch(); }
     renderSync();
   }
   function showAuthErr(m){
@@ -1845,24 +1911,43 @@ html.locked .wrap{visibility:hidden}
   $("gLogin").addEventListener("click",async()=>{
     if(!sb) return;
     $("authErr").hidden=true;
-    const r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}});
+    let id=""; try{ id=[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,"0")).join(""); }catch(e){ id=newId()+newId()+newId(); }
+    lsSet(HOKEY,JSON.stringify({id,t:Date.now()}));
+    startHandoffWatch();
+    const r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname+"?handoff="+id}});
     if(r.error) showAuthErr(r.error.message||r.error);
   });
-  $("otpForm").addEventListener("submit",async ev=>{
+  function authMsg(t){ const b=$("authErr"); b.textContent=t; b.hidden=false; }
+  $("pwLoginForm").addEventListener("submit",async ev=>{
     ev.preventDefault(); if(!sb) return;
-    const em=$("otpEmail").value.trim();
+    const em=$("pwEmail").value.trim(), pw=$("pwPass").value;
     if(!/^\S+@\S+\.\S+$/.test(em)){ toast("이메일 주소를 확인해 주세요"); return; }
-    const r=await sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:true}});
-    if(r.error){ toast(errMsg(r.error)); return; }
-    otpEmail=em; $("otpVerify").hidden=false; $("otpCode").focus(); toast("메일로 로그인 코드를 보냈어요");
+    if(pw.length<6){ toast("비밀번호를 6자 이상 입력해 주세요"); return; }
+    $("authErr").hidden=true;
+    const r=await sb.auth.signInWithPassword({email:em,password:pw});
+    if(r.error){
+      authMsg(/invalid login|credentials/i.test(r.error.message)
+        ?"이메일이나 비밀번호가 맞지 않아요. 아직 앱용 비밀번호를 만들지 않았다면, 구글로 로그인된 사파리나 PC에서 '4. 함께 쓰기 → 앱용 비밀번호'를 먼저 만들어 주세요."
+        :"로그인하지 못했어요: "+r.error.message);
+      return;
+    }
+    $("pwPass").value="";
+    if(r.data&&r.data.user) startCloud(r.data.user);
   });
-  $("otpVerify").addEventListener("submit",async ev=>{
+  $("pwOpen").addEventListener("click",()=>{ const f=$("pwSetForm"); f.hidden=!f.hidden; if(!f.hidden) $("pwNew").focus(); });
+  $("pwSetForm").addEventListener("submit",async ev=>{
     ev.preventDefault(); if(!sb) return;
-    const t=$("otpCode").value.replace(/\D/g,"");
-    if(t.length<6){ toast("메일로 받은 코드를 넣어 주세요"); return; }
-    const r=await sb.auth.verifyOtp({email:otpEmail,token:t,type:"email"});
-    if(r.error){ toast("코드가 맞지 않거나 시간이 지났어요"); return; }
-    $("otpCode").value=""; $("otpVerify").hidden=true;
+    const a=$("pwNew").value, b=$("pwNew2").value;
+    if(a.length<6){ toast("비밀번호는 6자 이상으로 정해 주세요"); return; }
+    if(a!==b){ toast("두 비밀번호가 서로 달라요"); $("pwNew2").value=""; $("pwNew2").focus(); return; }
+    const r=await sb.auth.updateUser({password:a});
+    if(r.error){
+      const m=r.error.message||"";
+      toast(/same|different from the old/i.test(m)?"지금 비밀번호와 같아요":/weak|short|characters/i.test(m)?"비밀번호가 너무 쉬워요. 더 길게 정해 주세요":"비밀번호를 저장하지 못했어요: "+m);
+      return;
+    }
+    $("pwNew").value=""; $("pwNew2").value=""; $("pwSetForm").hidden=true;
+    toast("앱용 비밀번호를 저장했어요. 홈 화면 앱에서 이메일과 이 비밀번호로 로그인하세요");
   });
   $("retryBtn").addEventListener("click",async()=>{
     syncErr=""; setSync();
@@ -2467,7 +2552,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-12";
+  var APP_VERSION="2026.11.11-14";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
