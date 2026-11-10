@@ -42,7 +42,9 @@
   --accent:#5fbf9f; --accent-text:#5fbf9f; --accent-soft:#1f3a31; --accent-ink:#0d1714; --danger:#f08a78; --danger-soft:#3a201b;
   --card:#86aee6; --card-soft:#1e2c40; --cash:#e0a862; --cash-soft:#3a2c1a; color-scheme:dark}
 
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scrollbar-gutter:stable}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scrollbar-gutter:stable;touch-action:manipulation}
+body,button,a,label,select,input,.lockov,.key,.keypad{touch-action:manipulation}
+.key{-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:13px;line-height:1.45;
   padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:10px 12px;box-sizing:border-box;overflow:hidden;
   height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
@@ -2582,7 +2584,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-16";
+  var APP_VERSION="2026.11.11-17";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
