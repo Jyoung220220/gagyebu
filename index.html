@@ -325,6 +325,36 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .cardform{border-top:1px solid var(--line);padding-top:10px;margin-top:8px}
 .cfgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
 .lbl2{font-size:11px;color:var(--muted);margin-bottom:3px}
+/* inbox */
+.inbar{display:flex;align-items:center;gap:8px;width:100%;background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:10px 12px;font-weight:700;font-size:13px;color:var(--ink);text-align:left}
+.inbar .n{background:var(--accent-text);color:var(--surface);border-radius:99px;padding:0 8px;font-size:12px}
+.inbar .t{margin-left:auto;font-weight:500;font-size:12px;color:var(--accent-text)}
+.ihead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.ihead h2{margin:0}
+.btn{height:30px;border-radius:8px;padding:0 12px;display:inline-flex;align-items:center;font-size:12.5px;border:1px solid var(--line);background:var(--surface);white-space:nowrap}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn.dng{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:700}
+.ib{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.ib+.ib{margin-top:8px}
+.ib.ibdup{border-color:#e5cf9f;background:var(--cash-soft)}
+.ib.ibcancel{border-color:#efc4bd;background:var(--danger-soft)}
+.ib.ibbad{background:var(--field)}
+.ibtop{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+.ibmid{display:flex;justify-content:space-between;gap:8px;font-size:14px;font-weight:600}
+.ibmid span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ibbot{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ibbot .sp{flex:1}
+.ibsel{height:30px;border:1px solid var(--line);border-radius:8px;background:var(--field);padding:0 6px;font-size:16px;transform:scale(.8125);transform-origin:left center;margin-right:-18px}
+.ibwhy{font-size:11px;color:var(--accent-text)}
+.ibwarn{font-size:11.5px;color:var(--cash);font-weight:600}
+.ibwarn.r{color:var(--danger)}
+.ibraw{font-size:12px;color:var(--muted);white-space:pre-wrap;word-break:break-all}
+.kv{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.kv span{grid-column:1/-1;font-size:11.5px;color:var(--muted);font-weight:600}
+.kv code{font-family:var(--font-num);font-size:11.5px;word-break:break-all;background:var(--field);padding:4px 6px;border-radius:6px}
+.kv .sbtn{height:30px}
+.steps{margin:10px 0;padding-left:20px;font-size:12px;color:var(--ink);line-height:1.6;display:flex;flex-direction:column;gap:4px}
+.steps code{font-family:var(--font-num);background:var(--field);padding:0 4px;border-radius:4px}
 /* app icon */
 .lockico.img{background-size:cover;background-position:center;background-color:#fff}
 .lockico.img svg{display:none}
@@ -451,6 +481,12 @@ html.locked .wrap{visibility:hidden}
       <p class="note" id="note" hidden></p>
     </form>
 
+    <button type="button" class="inbar" id="inboxBar" hidden>📥 카드 알림 <span class="n" id="inboxCount">0</span><span class="t" id="inboxToggle">확인하기 ›</span></button>
+    <section class="panel" id="inboxPanel" hidden>
+      <div class="ihead"><h2>📥 카드 알림</h2><button type="button" class="btn pri" id="inboxAll" hidden>모두 추가</button></div>
+      <div id="inboxList"></div>
+    </section>
+
     <section class="panel">
       <div class="whobar" id="whoBar" hidden></div>
       <div class="lbar">
@@ -535,6 +571,30 @@ html.locked .wrap{visibility:hidden}
           </div>
           <div class="row-btns" style="justify-content:flex-end;margin-top:10px"><button type="button" id="cfCancel" hidden>취소</button><button type="submit" class="pri" id="cfSave">카드 등록</button></div>
         </form>
+        <h3 class="lfh" style="margin-top:16px">문자 자동 입력 (아이폰 단축어)</h3>
+        <p class="help" id="autoOff">4. 함께 쓰기에서 로그인하면 쓸 수 있어요. 카드 승인 문자가 오면 단축어가 가계부 알림함으로 보내줘요.</p>
+        <div id="autoOn" hidden>
+          <p class="help">카드 승인 <b>문자(SMS)</b>가 오면 아이폰 단축어가 가계부 <b>📥 카드 알림</b>으로 보내요. 내역 탭에서 확인하고 추가하면 돼요. 카톡 알림톡은 지금처럼 <b>문자 붙여넣기</b>를 써 주세요.</p>
+          <div class="row-btns"><button type="button" id="autoShow">연결 정보 · 설정 방법</button><button type="button" id="autoTest">테스트 알림 보내기</button></div>
+          <div id="autoInfo" hidden>
+            <div class="kv"><span>주소 (URL)</span><code id="kvUrl"></code><button type="button" class="sbtn" data-copy="kvUrl">복사</button></div>
+            <div class="kv"><span>헤더 apikey</span><code id="kvApi"></code><button type="button" class="sbtn" data-copy="kvApi">복사</button></div>
+            <div class="kv"><span>내 연결 키 (p_key)</span><code id="kvKey"></code><button type="button" class="sbtn" data-copy="kvKey">복사</button></div>
+            <ol class="steps">
+              <li>아이폰 <b>단축어</b> 앱 → 아래 <b>자동화</b> → 오른쪽 위 <b>+</b> → <b>메시지</b></li>
+              <li><b>메시지에 포함</b>에 <code>승인</code> 입력 (보낸 사람에 카드사 번호를 넣으면 더 정확해요) → <b>즉시 실행</b> 선택 → 다음</li>
+              <li><b>새로운 빈 자동화</b> → 동작 검색에서 <b>URL 콘텐츠 가져오기</b> 추가</li>
+              <li>URL 자리에 위의 <b>주소</b> 붙여넣기 → 펼치기(›) → 방법 <b>POST</b></li>
+              <li><b>헤더</b> 추가: 키 <code>apikey</code>, 값에 위의 <b>헤더 apikey</b> 붙여넣기</li>
+              <li>요청 본문 <b>JSON</b> → 필드 추가 → <b>텍스트</b>: 키 <code>p_key</code>, 값에 <b>내 연결 키</b> 붙여넣기</li>
+              <li>필드 하나 더 → <b>텍스트</b>: 키 <code>p_text</code>, 값은 변수 <b>단축어 입력</b>을 고른 뒤 눌러서 <b>내용</b>으로 바꾸기</li>
+              <li>완료 · 이제 승인 문자가 오면 <b>📥 카드 알림</b>에 들어와요</li>
+            </ol>
+            <div class="row-btns"><button type="button" id="autoReset">연결 키 새로 만들기</button></div>
+            <div class="confirm" id="autoResetConfirm" hidden style="margin-top:8px"><span>새 키를 만들면 지금 단축어는 멈춰요. 단축어의 p_key를 새 키로 바꿔야 해요.</span><button type="button" class="btn-plain" id="autoResetNo">취소</button><button type="button" class="btn-danger" id="autoResetYes">새로 만들기</button></div>
+            <p class="help" style="margin:8px 0 0">연결 키는 내 알림함에 <b>넣기만</b> 할 수 있는 열쇠라 내역을 볼 수는 없어요. 다른 사람에게 알려졌다면 새로 만들어 주세요.</p>
+          </div>
+        </div>
         <p class="help" style="margin:8px 0 0">문자 붙여넣기 때 카드사와 끝자리로 카드를 알아봐요. 카드사마다 한 장씩이면 끝자리는 비워 두셔도 돼요. 실적을 적으면 통계 → 카드별에서 이번 달 실적을 보여줘요.</p>
       </div>
     </details>
@@ -970,7 +1030,7 @@ html.locked .wrap{visibility:hidden}
     const head=t.slice(0,dm.index).trim()||t.split("\n")[0];
     let company=""; for(const c of COMPANIES){ if(c.k.some(k=>head.toUpperCase().includes(k.toUpperCase()))){ company=c.n; break; } }
     const l4=/(?:^|[^\d,*])(\d{4})(?![\d,])/.exec(head);
-    return {date:y+"-"+pad(mo)+"-"+pad(da),place:place.slice(0,40),amount,cancel,company,last4:l4?l4[1]:""};
+    return {date:y+"-"+pad(mo)+"-"+pad(da),place:place.slice(0,40),amount,cancel,company,last4:l4?l4[1]:"",time:dm[3]?pad(dm[3])+":"+dm[4]:""};
   }
   function doParse(){
     const ta=$("pasteText"), r=parseCardText(ta.value);
@@ -986,6 +1046,7 @@ html.locked .wrap{visibility:hidden}
     if(cm.id) parts.push(cardName(cm.id));
     else if(r.company) parts.push(r.company+(r.last4?" "+r.last4:"")+"는 아직 등록 안 됨 (설정 → 3. 내 카드 등록)");
     parts.push(g?g.cat+" ("+g.why+")":"카테고리를 골라 주세요");
+    if(findDup(r,cm.id)) parts.push("⚠️ 같은 날 같은 금액 내역이 이미 있어요");
     note(parts.join(" · "),"auto");
     ta.value=""; $("pasteBox").hidden=true;
   }
@@ -1021,7 +1082,7 @@ html.locked .wrap{visibility:hidden}
     $("tCash").textContent=won(sum(list.filter(e=>e.pay==="cash")))+"원";
     document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
     $("tab-list").hidden=tab!=="list"; $("tab-stats").hidden=tab!=="stats"; $("tab-settings").hidden=tab!=="settings";
-    if(tab==="list") renderList(list);
+    if(tab==="list"){ renderList(list); renderInbox(); }
     if(tab==="stats") renderStats(list);
     if(tab==="settings"){ renderCats(); renderRules(); renderCardsSettings(); }
     renderSync();
@@ -1633,7 +1694,7 @@ html.locked .wrap{visibility:hidden}
       });
       entries=list;
       if(!partnered()){ who="me"; statsWho="me"; }
-      syncErr=""; persist(); afterRemote();
+      syncErr=""; persist(); afterRemote(); pullInbox();
     }catch(e){ syncErr=errMsg(e); setSync(); }
   }
   function afterRemote(){
@@ -1656,6 +1717,7 @@ html.locked .wrap{visibility:hidden}
         if(p.new&&hh&&p.new.id===hh.id){ hh=p.new; applyHH(); persist(); afterRemote(); }
       })
       .on("postgres_changes",{event:"*",schema:"public",table:"members"},()=>pullAll())
+      .on("postgres_changes",{event:"*",schema:"public",table:"inbox"},()=>pullInbox())
       .subscribe(st=>{
         const was=live; live=st==="SUBSCRIBED"; setSync();
         if(live&&!was) pullAll();
@@ -1708,7 +1770,7 @@ html.locked .wrap{visibility:hidden}
     channel=null; live=false; lsDel(CACHE);
     if(me){ lsDel("gagyebu.migrated."+me); if(!outbox.length) lsDel(OUTBOX+me); }
     cloudOn=false; cloudReady=false; me=null; hh=null; members=[]; outbox=[]; who="me"; statsWho="me";
-    entries=own; cards=myK; persist(); refreshSelects();
+    entries=own; cards=myK; persist(); refreshSelects(); inbox=[]; renderInbox();
   }
   async function initCloud(){
     if(!canCloud){ renderSync(); return; }
@@ -1767,7 +1829,7 @@ html.locked .wrap{visibility:hidden}
     $("syncOut").hidden=!canCloud||inState;
     $("syncIn").hidden=!canCloud||!inState;
     updatePriv();
-    $("bkLocal").hidden=cloudOn; $("bkCloud").hidden=!cloudOn; iconNotice();
+    $("bkLocal").hidden=cloudOn; $("bkCloud").hidden=!cloudOn; iconNotice(); renderAuto();
     if(!inState){ $("syncTag").textContent=""; return; }
     const meM=members.find(m=>m.user_id===me);
     if(document.activeElement!==$("myName")) $("myName").value=meM?meM.display_name:"";
@@ -2234,6 +2296,166 @@ html.locked .wrap{visibility:hidden}
   applyIcon();
   if(window.navigator.standalone===true||matchMedia("(display-mode: standalone)").matches) $("iconStandalone").hidden=false;
 
+
+  /* ---------- 알림함 (카드 문자 자동 수신) ---------- */
+  let inbox=[], inboxOpen=false, inboxCat={}, inboxReady=false, pushKey="";
+  function findDup(p,cardId){
+    return entries.find(e=>isMine(e)&&e.date===p.date&&e.amount===p.amount&&(!cardId||!e.card||e.card===cardId))||null;
+  }
+  function findCancelMatch(p,cardId){
+    const lim=new Date(p.date+"T00:00:00"); lim.setDate(lim.getDate()-45);
+    const ls=lim.getFullYear()+"-"+pad(lim.getMonth()+1)+"-"+pad(lim.getDate());
+    const c=entries.filter(e=>isMine(e)&&e.amount===p.amount&&e.date<=p.date&&e.date>=ls);
+    const pn=norm(p.place);
+    c.sort((a,b)=>{
+      const sa=(cardId&&a.card===cardId?2:0)+(pn&&norm(a.place)===pn?1:0), sb2=(cardId&&b.card===cardId?2:0)+(pn&&norm(b.place)===pn?1:0);
+      return sb2-sa||(a.date<b.date?1:-1);
+    });
+    return c[0]||null;
+  }
+  async function pullInbox(){
+    if(!cloudOn||!sb) return;
+    const r=await sb.from("inbox").select("*").order("created_at");
+    if(r.error){ inboxReady=false; return; }
+    inboxReady=true;
+    const before=new Set(inbox.map(x=>x.id));
+    inbox=r.data||[];
+    const fresh=inbox.filter(x=>!before.has(x.id)).length;
+    if(fresh&&before.size>=0&&inboxSeen) toast("카드 알림 "+fresh+"건이 들어왔어요");
+    inboxSeen=true;
+    renderInbox();
+  }
+  let inboxSeen=false;
+  async function removeInbox(id){
+    inbox=inbox.filter(x=>x.id!==id); delete inboxCat[id]; renderInbox();
+    try{ await sb.from("inbox").delete().eq("id",id); }catch(e){}
+  }
+  function addFromInbox(item,p,cardId,cat){
+    const e={id:newId(),date:p.date,place:p.place,amount:p.amount,cat,pay:"card",created:Date.now()};
+    if(cardId) e.card=cardId; if(cloudOn) e.uid=me;
+    entries.push(e); commitEntry(e);
+    removeInbox(item.id);
+  }
+  function renderInbox(){
+    const bar=$("inboxBar"), P=$("inboxPanel");
+    const show=cloudOn&&inbox.length>0;
+    bar.hidden=!show; if(!show){ P.hidden=true; inboxOpen=false; return; }
+    $("inboxCount").textContent=inbox.length;
+    $("inboxToggle").textContent=inboxOpen?"접기 ▴":"확인하기 ›";
+    P.hidden=!inboxOpen; if(!inboxOpen) return;
+    const L=$("inboxList"); L.innerHTML="";
+    let addable=0;
+    inbox.forEach(item=>{
+      const p=parseCardText(item.text);
+      const box=el("div","ib");
+      const top=el("div","ibtop");
+      const when=new Date(item.created_at);
+      if(!p){
+        box.classList.add("ibbad");
+        top.appendChild(el("span",null,"읽지 못한 알림 · "+(when.getMonth()+1)+"/"+when.getDate()+" "+pad(when.getHours())+":"+pad(when.getMinutes())));
+        const raw=el("div","ibraw",item.text.slice(0,200));
+        const bot=el("div","ibbot"); bot.appendChild(el("span","sp"));
+        const ig=el("button","btn","무시"); ig.type="button"; ig.addEventListener("click",()=>removeInbox(item.id));
+        const ed=el("button","btn pri","입력칸에서 고치기"); ed.type="button";
+        ed.addEventListener("click",()=>{ $("pasteBox").hidden=false; $("pasteText").value=item.text; removeInbox(item.id); $("form").scrollIntoView({block:"start"}); });
+        bot.append(ig,ed); box.append(top,raw,bot); L.appendChild(box); return;
+      }
+      const cm=matchCard(p); const cardId=cm.id;
+      const cardTxt=cardId?cardName(cardId):(p.company?p.company+(p.last4?" "+p.last4:""):"카드");
+      top.append(el("span","pay card",cardTxt),el("span",null,fmtDate(p.date)+(p.time?" "+p.time:"")+(p.cancel?" · 승인취소":" · 문자 자동 수신")));
+      const mid=el("div","ibmid"); mid.append(el("span",null,p.place||"(사용처 없음)"),el("span","num",(p.cancel?"−":"")+won(p.amount)+"원"));
+      box.append(top,mid);
+      const bot=el("div","ibbot");
+      if(p.cancel){
+        box.classList.add("ibcancel");
+        const m=findCancelMatch(p,cardId);
+        box.appendChild(el("div","ibwarn r",m?"취소 문자예요 · 짝이 되는 내역: "+fmtDate(m.date)+" "+(m.place||"")+" "+won(m.amount)+"원":"취소 문자예요 · 짝이 되는 내역을 찾지 못했어요"));
+        bot.appendChild(el("span","sp"));
+        const ig=el("button","btn","무시"); ig.type="button"; ig.addEventListener("click",()=>removeInbox(item.id)); bot.appendChild(ig);
+        if(m){ const dl=el("button","btn dng","그 내역 지우기"); dl.type="button";
+          dl.addEventListener("click",()=>{ entries=entries.filter(x=>x.id!==m.id); commitDelete(m.id); removeInbox(item.id); render(); toast("짝이 되는 내역을 지웠어요"); });
+          bot.appendChild(dl); }
+        box.appendChild(bot); L.appendChild(box); return;
+      }
+      const dup=findDup(p,cardId);
+      const g=guessCat(p.place);
+      const s=el("select","ibsel"); s.setAttribute("aria-label","카테고리");
+      const ph=el("option",null,"카테고리"); ph.value=""; s.appendChild(ph);
+      cats.forEach(c=>{const o=el("option",null,c);o.value=c;s.appendChild(o);});
+      s.value=inboxCat[item.id]||(g?g.cat:"");
+      s.addEventListener("change",()=>{ inboxCat[item.id]=s.value; });
+      bot.appendChild(s);
+      if(g&&!inboxCat[item.id]) bot.appendChild(el("span","ibwhy",g.why));
+      bot.appendChild(el("span","sp"));
+      const doAdd=()=>{ const cat=s.value; if(!cat){ toast("카테고리를 골라 주세요"); s.focus(); return; } addFromInbox(item,p,cardId,cat); render(); toast(won(p.amount)+"원 추가했어요"); };
+      if(dup){
+        box.classList.add("ibdup");
+        box.insertBefore(el("div","ibwarn","⚠️ 이미 입력된 것 같아요 · "+fmtDate(dup.date)+" "+(dup.place||"")+" "+won(dup.amount)+"원"),null);
+        const ig=el("button","btn pri","무시"); ig.type="button"; ig.addEventListener("click",()=>removeInbox(item.id));
+        const ad=el("button","btn","그래도 추가"); ad.type="button"; ad.addEventListener("click",doAdd);
+        bot.append(ig,ad);
+      } else {
+        if(s.value) addable++;
+        const ig=el("button","btn","무시"); ig.type="button"; ig.addEventListener("click",()=>removeInbox(item.id));
+        const ad=el("button","btn pri","추가"); ad.type="button"; ad.addEventListener("click",doAdd);
+        bot.append(ig,ad);
+      }
+      box.appendChild(bot); L.appendChild(box);
+    });
+    $("inboxAll").hidden=addable<2;
+  }
+  $("inboxBar").addEventListener("click",()=>{ inboxOpen=!inboxOpen; renderInbox(); });
+  $("inboxAll").addEventListener("click",()=>{
+    let n=0, skip=0;
+    inbox.slice().forEach(item=>{
+      const p=parseCardText(item.text); if(!p||p.cancel) return;
+      const cardId=matchCard(p).id; if(findDup(p,cardId)) return;
+      const g=guessCat(p.place); const cat=inboxCat[item.id]||(g?g.cat:"");
+      if(!cat){ skip++; return; }
+      addFromInbox(item,p,cardId,cat); n++;
+    });
+    render(); toast(n+"건 추가했어요"+(skip?" · 카테고리가 없는 "+skip+"건은 남겨 뒀어요":""));
+  });
+
+  // 설정: 문자 자동 입력 연결 정보
+  const RPC_URL=SB_URL+"/rest/v1/rpc/push_card_text";
+  function renderAuto(){
+    $("autoOff").hidden=cloudOn; $("autoOn").hidden=!cloudOn;
+  }
+  async function loadKey(reset){
+    const r=await sb.rpc("get_push_key",{p_reset:!!reset});
+    if(r.error){ toast(errMsg(r.error)); return false; }
+    pushKey=r.data; $("kvUrl").textContent=RPC_URL; $("kvApi").textContent=SB_KEY; $("kvKey").textContent=pushKey;
+    return true;
+  }
+  $("autoShow").addEventListener("click",async()=>{
+    const B=$("autoInfo");
+    if(!B.hidden){ B.hidden=true; return; }
+    if(await loadKey(false)) B.hidden=false;
+  });
+  $("autoReset").addEventListener("click",async()=>{
+    if(!$("autoResetConfirm").hidden){ return; }
+    $("autoResetConfirm").hidden=false;
+  });
+  $("autoResetNo").addEventListener("click",()=>{ $("autoResetConfirm").hidden=true; });
+  $("autoResetYes").addEventListener("click",async()=>{
+    $("autoResetConfirm").hidden=true;
+    if(await loadKey(true)) toast("새 연결 키를 만들었어요. 단축어의 p_key를 바꿔 주세요");
+  });
+  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{
+    const t=$(b.dataset.copy).textContent;
+    navigator.clipboard.writeText(t).then(()=>toast("복사했어요"),()=>toast("길게 눌러서 복사해 주세요"));
+  }));
+  $("autoTest").addEventListener("click",async()=>{
+    if(!pushKey&&!(await loadKey(false))) return;
+    const d=new Date();
+    const sample="[테스트] 카드승인 홍*동\n1,000원 일시불\n"+pad(d.getMonth()+1)+"/"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes())+" 가계부테스트가게\n누적1,000원";
+    const r=await sb.rpc("push_card_text",{p_key:pushKey,p_text:sample});
+    if(r.error){ toast(errMsg(r.error)); return; }
+    await pullInbox(); inboxOpen=true; tab="list"; render();
+    toast("테스트 알림을 보냈어요. 내역 탭 알림함을 확인해 보세요");
+  });
+
   refreshSelects(); resetForm(); render(); initCloud();
 })();
 </script>
@@ -2245,7 +2467,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-11";
+  var APP_VERSION="2026.11.11-12";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
