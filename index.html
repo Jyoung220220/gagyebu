@@ -44,8 +44,21 @@
 
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scrollbar-gutter:stable}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:13px;line-height:1.45;
-  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:10px 32px;overflow-x:hidden}
-.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:10px 12px;box-sizing:border-box;overflow:hidden;
+  height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px;height:100%;min-height:0}
+.wrap>*{flex:none}
+/* 화면 고정: 탭 아래 영역만 스크롤 */
+#tab-list{flex:1 1 auto;min-height:0}
+#tab-list>form,#tab-list>.inbar{flex:none}
+#inboxPanel{flex:none;max-height:42vh;overflow-y:auto;overscroll-behavior:contain}
+#listPanel{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+#listPanel>*{flex:none}
+#listPanel>.lbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+#tab-stats{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#tab-settings{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+#tab-settings>*{flex:none}
 .num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
 button,select,input,textarea{font-family:inherit;color:inherit}
 button{cursor:pointer;font-size:13px}
@@ -140,7 +153,7 @@ button{cursor:pointer;font-size:13px}
 #tab-list .sbox{margin-bottom:8px}
 .rsum{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;padding:2px 2px 6px;border-bottom:1px solid var(--line)}
 .rsum span:last-child{font-family:var(--font-num)}
-.lscroll{max-height:min(56vh,480px);overflow-y:auto;overscroll-behavior:contain}
+.lscroll{padding-bottom:2px}
 
 /* ledger rows */
 .lrow{display:grid;grid-template-columns:76px 1fr 74px 64px 92px 52px;align-items:center;gap:6px;padding:7px 2px;border-bottom:1px solid var(--line)}
@@ -499,7 +512,7 @@ html.locked .wrap{visibility:hidden}
       <div id="inboxList"></div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="listPanel">
       <div class="whobar" id="whoBar" hidden></div>
       <div class="lbar">
         <div class="chips" id="filterbar">
@@ -516,9 +529,11 @@ html.locked .wrap{visibility:hidden}
         <button type="button" class="clr" id="qClr" aria-label="검색어 지우기" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <div class="ychips" id="yChips" hidden></div>
-      <div id="calBox" hidden></div>
-      <div class="rsum" id="lsum" hidden></div>
-      <div class="lscroll" id="lscroll"></div>
+      <div class="lbody" id="lbody">
+        <div id="calBox" hidden></div>
+        <div class="rsum" id="lsum" hidden></div>
+        <div class="lscroll" id="lscroll"></div>
+      </div>
     </section>
   </div>
 
@@ -919,7 +934,7 @@ html.locked .wrap{visibility:hidden}
     const b=el("button","sw"); b.type="button"; b.dataset.id=t.id;
     const i=el("i"); i.style.background=t.l[0];
     b.append(i,document.createTextNode(t.name));
-    b.addEventListener("click",()=>{applyAccent(t.id);toast(t.name+" 색상으로 바꿨어요");});
+    b.addEventListener("click",()=>{applyAccent(t.id);saveAccentPref();toast(t.name+" 색상으로 바꿨어요");});
     $("swatches").appendChild(b);
   });
   applyAccent(accent);
@@ -1781,11 +1796,26 @@ html.locked .wrap{visibility:hidden}
       }
       cloudOn=true;
       await pullAll();
+      await syncAccent(user);
       cloudReady=true; subscribe(); flush();
     }catch(e){
       syncErr=errMsg(e);
       if(!cloudOn) me=null;
     }finally{ starting=false; render(); }
+  }
+  // 테마색상을 계정에 저장해서 사파리·홈 화면 앱·PC 어디서 로그인해도 같은 색으로
+  function saveAccentPref(){
+    const at=Date.now(); lsSet("gagyebu.accentAt",String(at));
+    if(cloudOn&&sb) sb.auth.updateUser({data:{accent,accent_at:at}}).catch(()=>{});
+  }
+  async function syncAccent(user){
+    try{
+      let u=user;
+      try{ const g=await sb.auth.getUser(); if(g.data&&g.data.user) u=g.data.user; }catch(e){}
+      const m=(u&&u.user_metadata)||{}, remoteAt=Number(m.accent_at)||0, localAt=Number(lsGet("gagyebu.accentAt"))||0;
+      if(m.accent&&remoteAt>localAt){ applyAccent(m.accent); lsSet("gagyebu.accentAt",String(remoteAt)); }
+      else if(localAt>remoteAt) await sb.auth.updateUser({data:{accent,accent_at:localAt}});
+    }catch(e){}
   }
   function goLocal(){
     const own=ownEntries().map(e=>Object.assign(e,{synced:true}));
@@ -2552,7 +2582,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-14";
+  var APP_VERSION="2026.11.11-16";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
