@@ -338,6 +338,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .iconwarn{font-size:12px;color:var(--muted);background:var(--field);border-radius:8px;padding:9px 11px;margin:12px 0 0;line-height:1.6}
 .iconwarn.strong{background:var(--danger-soft)}
 .iconwarn.strong .cond{color:var(--danger);font-weight:700}
+.iconwarn.standalone-only{background:var(--cash-soft);color:var(--ink)}
 /* app lock */
 .lockov{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);align-items:center;justify-content:center;
   padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px))}
@@ -622,7 +623,8 @@ html.locked .wrap{visibility:hidden}
           <div class="zoomrow"><span>작게</span><input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="확대"><span>크게</span></div>
           <div class="row-btns"><button type="button" id="cropCancel">취소</button><button type="button" class="pri" id="cropApply">적용</button></div>
         </div>
-        <p class="iconwarn" id="iconWarn">변경 후 홈 화면 설치를 다시 진행하셔야 합니다.<br>(홈 화면 아이콘 삭제 → 사파리에서 다시 "홈 화면에 추가")<br><span class="cond">단, 구글 로그인 연동이 되어 있지 않은 경우 기존 내역이 삭제될 수 있어요. 먼저 4. 함께 쓰기에서 로그인하거나 7. 백업을 해 주세요.</span></p>
+        <p class="iconwarn standalone-only" id="iconStandalone" hidden>지금은 <b>홈 화면 앱</b>으로 열려 있어요. 여기서 바꾼 아이콘은 앱을 지우면 같이 사라져서 적용되지 않아요. <b>사파리</b>에서 바꿔 주세요.</p>
+        <p class="iconwarn" id="iconWarn">변경 후 홈 화면 설치를 다시 진행하셔야 합니다.<br>① <b>사파리</b>에서 이 주소를 열고 로그인 → ② 여기서 아이콘 바꾸기 → ③ 홈 화면의 가계부 아이콘 삭제 → ④ 사파리에서 공유 → "홈 화면에 추가"<br><span class="cond">단, 구글 로그인 연동이 되어 있지 않은 경우 기존 내역이 삭제될 수 있어요. 먼저 4. 함께 쓰기에서 로그인하거나 7. 백업을 해 주세요.</span></p>
       </div>
     </details>
 
@@ -2230,6 +2232,7 @@ html.locked .wrap{visibility:hidden}
   });
   $("iconReset").addEventListener("click",()=>{ lsDel(ICONKEY); iconCfg=null; location.reload(); });
   applyIcon();
+  if(window.navigator.standalone===true||matchMedia("(display-mode: standalone)").matches) $("iconStandalone").hidden=false;
 
   refreshSelects(); resetForm(); render(); initCloud();
 })();
@@ -2242,7 +2245,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-10";
+  var APP_VERSION="2026.11.11-11";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
