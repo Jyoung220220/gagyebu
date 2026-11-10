@@ -398,6 +398,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <div class="fold-body">
         <div id="syncNA" hidden><p class="help">함께 쓰기는 직접 올린 앱 주소(vercel.app)에서 열었을 때 쓸 수 있어요.</p></div>
         <div id="syncOut" hidden>
+          <div class="sstat err" id="authErr" hidden></div>
           <p class="help">로그인하면 내역이 서버에 안전하게 저장되고, 배우자와 실시간으로 함께 볼 수 있어요. 휴대폰을 바꿔도 내역이 그대로예요.</p>
           <button type="button" class="gbtn" id="gLogin"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>구글로 로그인</button>
           <p class="help" style="margin-top:12px">구글 로그인이 안 되면 이메일로 받은 코드로 로그인할 수 있어요.</p>
@@ -1456,12 +1457,25 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     sb.auth.onAuthStateChange((ev,s)=>{
       if(s&&s.user&&(ev==="SIGNED_IN"||ev==="INITIAL_SESSION")) setTimeout(()=>startCloud(s.user),0);
     });
+    const qs=new URLSearchParams(location.search+"&"+location.hash.replace(/^#/,""));
+    let authErr=qs.get("error_description")||qs.get("error")||"";
     let session=null;
-    try{ const r=await sb.auth.getSession(); session=r.data&&r.data.session; }catch(e){}
-    if(/[?&](code|error)=/.test(location.search)) history.replaceState(null,"",location.pathname+location.hash);
+    try{ const r=await sb.auth.getSession(); session=r.data&&r.data.session; if(r.error&&!authErr) authErr=r.error.message||String(r.error); }catch(e){ if(!authErr) authErr=String(e&&e.message||e); }
+    if(/[?&](code|error)=/.test(location.search)||/error=/.test(location.hash)) history.replaceState(null,"",location.pathname);
+    if(authErr&&!session) showAuthErr(authErr);
     if(session) startCloud(session.user);
     else if(cloudOn){ goLocal(); render(); }
     renderSync();
+  }
+  function showAuthErr(m){
+    const t=String(m).replace(/\+/g," ");
+    let k="로그인하지 못했어요: "+t;
+    if(/exchange external code|invalid_client|unauthorized_client/i.test(t)) k="구글 연결 정보가 맞지 않아요. Supabase의 Google 설정에 넣은 Client ID와 Secret을 다시 확인해 주세요. ("+t+")";
+    else if(/code verifier|flow state|invalid flow/i.test(t)) k="로그인을 시작한 화면과 돌아온 화면이 달라요. 같은 브라우저에서 다시 로그인해 주세요. ("+t+")";
+    else if(/provider is not enabled|Unsupported provider/i.test(t)) k="Supabase에서 Google 로그인이 켜져 있지 않아요. Sign In / Providers → Google → Enable을 확인해 주세요.";
+    else if(/redirect/i.test(t)) k="돌아올 주소가 등록되지 않았어요. Supabase URL Configuration을 확인해 주세요. ("+t+")";
+    const b=$("authErr"); b.textContent=k; b.hidden=false;
+    $("foldSync").open=true;
   }
   async function logout(){
     if(cloudOn){
@@ -1506,8 +1520,9 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   $("privBtn").addEventListener("click",()=>{ priv=!priv; updatePriv(); });
   $("gLogin").addEventListener("click",async()=>{
     if(!sb) return;
+    $("authErr").hidden=true;
     const r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}});
-    if(r.error) toast(errMsg(r.error));
+    if(r.error) showAuthErr(r.error.message||r.error);
   });
   $("otpForm").addEventListener("submit",async ev=>{
     ev.preventDefault(); if(!sb) return;
@@ -1586,7 +1601,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-1";
+  var APP_VERSION="2026.11.11-2";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
