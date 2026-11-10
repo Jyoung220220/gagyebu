@@ -118,7 +118,9 @@ button{cursor:pointer;font-size:13px}
 .seg button[aria-pressed="true"][data-pay="card"]{background:var(--card-soft);color:var(--card);font-weight:700}
 .seg button[aria-pressed="true"][data-pay="cash"]{background:var(--cash-soft);color:var(--cash);font-weight:700}
 .add{height:var(--h);background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:0 11px;font-weight:700;font-size:12.5px;white-space:nowrap}
-.cancel{height:var(--h);background:transparent;border:1px solid var(--line);border-radius:8px;padding:0 9px;color:var(--muted);font-size:12.5px}
+.clearbtn{height:var(--h);width:40px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--muted);display:inline-flex;align-items:center;justify-content:center}
+.clearbtn svg{width:16px;height:16px}
+.cancel{height:var(--h);width:40px;background:transparent;border:1px solid var(--line);border-radius:8px;padding:0;color:var(--muted);font-size:12.5px}
 .note{font-size:11.5px;color:var(--muted);margin:6px 0 0}
 .note.err{color:var(--danger)} .note.auto{color:var(--accent-text)}
 .panel.editing{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -292,7 +294,51 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .pk-foot button{flex:1;height:36px;border-radius:10px;border:1px solid var(--line);background:transparent;font-weight:600}
 .pk-foot .today{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:99px;z-index:40;max-width:calc(100% - 40px);white-space:nowrap}
+/* app lock */
+.lockov{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);align-items:center;justify-content:center;
+  padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px))}
+html.locked .lockov{display:flex}
+html.locked .wrap{visibility:hidden}
+.lockbox{width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.lockico{width:52px;height:52px;border-radius:16px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center}
+.lockico svg{width:26px;height:26px}
+.lockbox h2{margin:0;font-size:17px}
+#lockMsg{margin:0;color:var(--muted);font-size:13px;min-height:1.4em}
+#lockMsg.err{color:var(--danger)}
+.dots{display:flex;gap:14px;margin:4px 0 10px}
+.dots i{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--ink);display:block;box-sizing:border-box}
+.dots i.on{background:var(--ink)}
+.dots.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@media (prefers-reduced-motion:reduce){.dots.shake{animation:none}}
+.keypad{display:grid;grid-template-columns:repeat(3,72px);gap:12px 22px;justify-content:center}
+.key{width:72px;height:72px;border-radius:50%;border:0;background:var(--surface);font-size:26px;font-weight:500;font-family:var(--font-num);box-shadow:0 1px 0 var(--line);color:var(--ink)}
+.key:active{background:var(--accent-soft)}
+.key.sm{background:transparent;box-shadow:none;font-size:13px;font-family:var(--font-body);color:var(--muted);display:flex;align-items:center;justify-content:center}
+.key.sm svg{width:24px;height:24px}
+.lockforgot{display:flex;flex-direction:column;gap:12px;font-size:13px}
+.lockforgot p{margin:0;color:var(--muted);line-height:1.6}
+.lockforgot .row-btns{justify-content:center}
+.row-btns button.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.row-btns button.danger{background:var(--danger);color:#fff;border-color:var(--danger);font-weight:700}
+.lfh{margin:0 0 8px;font-size:12.5px;font-weight:700}
+#lockForm{border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
 </style>
+<script>try{var L=JSON.parse(localStorage.getItem("gagyebu.lock")||"null");if(L&&L.on)document.documentElement.classList.add("locked");}catch(e){}</script>
+
+<div class="lockov" id="lockOv" role="dialog" aria-label="앱 잠금">
+  <div class="lockbox">
+    <div class="lockico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+    <h2>우리집 가계부</h2>
+    <p id="lockMsg">비밀번호 4자리를 입력해 주세요</p>
+    <div class="dots" id="lockDots"><i></i><i></i><i></i><i></i></div>
+    <div class="keypad" id="keypad"></div>
+    <div class="lockforgot" id="lockForgot" hidden>
+      <p id="forgotText"></p>
+      <div class="row-btns"><button type="button" id="forgotNo">돌아가기</button><button type="button" class="danger" id="forgotYes"></button></div>
+    </div>
+  </div>
+</div>
 
 <div class="wrap">
   <div class="warn" id="storageWarn" hidden>이 화면에서는 저장이 되지 않아요. 비공개(시크릿) 창이라면 일반 창에서 다시 열어 주세요.</div>
@@ -345,6 +391,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
           <input class="f" id="place" placeholder="사용처" maxlength="40" aria-label="사용처" enterkeyhint="next" autocomplete="off">
           <input class="f" id="amount" inputmode="numeric" placeholder="금액" aria-label="금액" enterkeyhint="done">
           <button type="button" class="cancel" id="cancelEdit" hidden>취소</button>
+          <button type="button" class="clearbtn" id="clearBtn" aria-label="입력 내용 지우기" title="입력 내용 지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20H9.5L4.3 14.8a1.8 1.8 0 0 1 0-2.6l8-8a1.8 1.8 0 0 1 2.6 0l4.8 4.8a1.8 1.8 0 0 1 0 2.6L12 19.8"/><path d="M8.5 10.5l5 5"/></svg></button>
           <button type="submit" class="add" id="addBtn">추가</button>
         </div>
         <div class="sugg" id="sugg" hidden></div>
@@ -393,8 +440,39 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 
   <!-- 설정 -->
   <div class="stack" id="tab-settings" hidden>
+    <details class="panel fold" id="foldCats">
+      <summary>1. 카테고리 항목 추가or삭제</summary>
+      <div class="fold-body">
+        <form class="catadd" id="catForm" autocomplete="off">
+          <input class="f" id="catNew" placeholder="새 카테고리 이름" maxlength="10" aria-label="새 카테고리 이름" enterkeyhint="done">
+          <button type="submit" class="add">추가</button>
+        </form>
+        <div class="clist" id="clist"></div>
+      </div>
+    </details>
+
+    <details class="panel fold" id="foldKw" open>
+      <summary>2. 카테고리 자동입력 키워드설정</summary>
+      <div class="fold-body">
+        <div class="kwtop">
+          <span class="cnt" id="kwCount"></span>
+          <div class="sbox">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input class="f" id="ruleSearch" type="text" placeholder="검색" aria-label="키워드 검색" enterkeyhint="search">
+            <button type="button" class="clr" id="ruleClr" aria-label="검색어 지우기" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+        </div>
+        <form class="rule-form" id="ruleForm" autocomplete="off">
+          <input class="f" id="ruleKw" placeholder="키워드" maxlength="20" aria-label="키워드" enterkeyhint="done">
+          <select class="f" id="ruleCat" aria-label="카테고리"></select>
+          <button type="submit" class="add">등록</button>
+        </form>
+        <div class="rules" id="rules"></div>
+      </div>
+    </details>
+
     <details class="panel fold" id="foldSync">
-      <summary><span>함께 쓰기<span class="sumtag" id="syncTag"></span></span></summary>
+      <summary><span>3. 함께 쓰기<span class="sumtag" id="syncTag"></span></span></summary>
       <div class="fold-body">
         <div id="syncNA" hidden><p class="help">함께 쓰기는 직접 올린 앱 주소(vercel.app)에서 열었을 때 쓸 수 있어요.</p></div>
         <div id="syncOut" hidden>
@@ -434,48 +512,50 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       </div>
     </details>
 
-    <details class="panel fold" id="foldCats">
-      <summary>카테고리 항목 추가or삭제</summary>
+    <details class="panel fold" id="foldLock">
+      <summary><span>4. 앱 잠금화면설정<span class="sumtag" id="lockTag"></span></span></summary>
       <div class="fold-body">
-        <form class="catadd" id="catForm" autocomplete="off">
-          <input class="f" id="catNew" placeholder="새 카테고리 이름" maxlength="10" aria-label="새 카테고리 이름" enterkeyhint="done">
-          <button type="submit" class="add">추가</button>
-        </form>
-        <div class="clist" id="clist"></div>
-      </div>
-    </details>
-
-    <details class="panel fold" id="foldKw" open>
-      <summary>카테고리 자동입력 키워드설정</summary>
-      <div class="fold-body">
-        <div class="kwtop">
-          <span class="cnt" id="kwCount"></span>
-          <div class="sbox">
-            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-            <input class="f" id="ruleSearch" type="text" placeholder="검색" aria-label="키워드 검색" enterkeyhint="search">
-            <button type="button" class="clr" id="ruleClr" aria-label="검색어 지우기" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-          </div>
+        <p class="help" id="lockState"></p>
+        <button type="button" class="sbtn pri" id="lockOnBtn">잠금 켜기</button>
+        <div id="lockOpts" hidden>
+          <div class="srow2"><span class="lbl">앱을 나갔다 오면</span>
+            <div><select class="f" id="lockAfter" aria-label="다시 잠그는 시간">
+              <option value="0">바로 잠그기</option><option value="60">1분 뒤 잠그기</option><option value="300">5분 뒤 잠그기</option><option value="600">10분 뒤 잠그기</option>
+            </select></div></div>
+          <div class="row-btns"><button type="button" id="lockChange">비밀번호 바꾸기</button><button type="button" id="lockOffBtn">잠금 끄기</button></div>
         </div>
-        <form class="rule-form" id="ruleForm" autocomplete="off">
-          <input class="f" id="ruleKw" placeholder="키워드" maxlength="20" aria-label="키워드" enterkeyhint="done">
-          <select class="f" id="ruleCat" aria-label="카테고리"></select>
-          <button type="submit" class="add">등록</button>
+        <form id="lockForm" autocomplete="off" hidden>
+          <h3 class="lfh" id="lockFormTitle"></h3>
+          <div class="srow2" id="pinCurRow"><span class="lbl">지금 비밀번호</span><div><input class="f" id="pinCur" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="지금 비밀번호" enterkeyhint="next"></div></div>
+          <div class="srow2" id="pinNewRow"><span class="lbl">새 비밀번호</span><div><input class="f" id="pinNew" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" aria-label="새 비밀번호" placeholder="숫자 4자리" enterkeyhint="next"></div></div>
+          <div class="srow2" id="pinNew2Row"><span class="lbl">한 번 더</span><div><input class="f" id="pinNew2" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" aria-label="새 비밀번호 확인" placeholder="같은 숫자 4자리" enterkeyhint="done"></div></div>
+          <div class="row-btns" style="justify-content:flex-end"><button type="button" id="lockCancel">취소</button><button type="submit" class="pri" id="lockSave">저장</button></div>
         </form>
-        <div class="rules" id="rules"></div>
+        <p class="help" style="margin:10px 0 0">잠금은 이 기기에만 적용돼요. 배우자 휴대폰이나 다른 기기는 각자 따로 설정해요.</p>
       </div>
     </details>
 
     <details class="panel fold" id="foldColor">
-      <summary>앱 색상</summary>
+      <summary>5. 테마색상</summary>
       <div class="fold-body"><div class="swatches" id="swatches"></div></div>
     </details>
 
     <details class="panel fold" id="foldBackup">
-      <summary>백업 · 휴대폰에 설치하기</summary>
+      <summary>6. 백업 · 휴대폰에 설치하기</summary>
       <div class="fold-body">
-        <p class="help">내역은 <b>이 휴대폰 안에만</b> 저장돼요. 같은 링크를 가족이 열어도 각자 자기 내역만 보여요.</p>
-        <p class="help"><b>앱처럼 설치</b> · 아이폰: 사파리 → 공유 → "홈 화면에 추가" / 갤럭시: 크롬 → ⋮ → "홈 화면에 추가"</p>
-        <p class="help"><b>주의</b> · 홈 화면 아이콘 삭제, 브라우저 데이터 삭제, 휴대폰 교체 시 내역이 사라질 수 있어요. 한 달에 한 번 백업해 두세요.</p>
+        <h3 class="lfh">내역은 어디에 저장되나요?</h3>
+        <div id="bkLocal">
+          <p class="help">지금은 <b>이 기기에만</b> 저장돼요. 같은 주소를 가족이 열어도 각자 자기 내역만 보여요.</p>
+          <p class="help">홈 화면 아이콘을 지우거나, 브라우저 기록·데이터를 삭제하거나, 휴대폰을 바꾸면 내역이 사라질 수 있어요. <b>한 달에 한 번 백업</b>해 두거나, <b>3. 함께 쓰기</b>에서 로그인하면 서버에 자동으로 저장돼요.</p>
+        </div>
+        <div id="bkCloud" hidden>
+          <p class="help">함께 쓰기로 로그인되어 있어서 <b>서버에 자동으로 저장</b>되고 있어요. 휴대폰을 바꾸거나 앱을 지워도 같은 구글 계정으로 다시 로그인하면 그대로예요.</p>
+          <p class="help">안심용으로 <b>두세 달에 한 번</b> 엑셀용(CSV) 파일을 저장해 두면 좋아요.</p>
+        </div>
+        <h3 class="lfh" style="margin-top:12px">백업 파일</h3>
+        <p class="help"><b>백업 파일 저장</b> · 내가 입력한 내역(나만 보기 포함), 카테고리, 키워드가 담겨요. 배우자 내역은 들어가지 않아요. 다른 기기에서 <b>백업 불러오기</b>로 되살릴 수 있어요.</p>
+        <p class="help"><b>엑셀용(CSV) 저장</b> · 엑셀이나 구글 시트에서 열어 보는 파일이에요. 이 파일로는 되살릴 수 없어요.</p>
+        <p class="help"><b>백업 불러오기</b> · 이미 있는 내역은 건너뛰고 없는 것만 추가돼서, 여러 번 불러와도 겹치지 않아요.</p>
         <div class="row-btns">
           <button type="button" id="backupBtn">백업 파일 저장</button>
           <button type="button" id="csvBtn">엑셀용(CSV) 저장</button>
@@ -492,6 +572,9 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
           <div><textarea class="f ta" id="pasteBackup" placeholder="백업 내용 붙여넣기"></textarea></div>
           <div class="row-btns" style="margin-top:6px"><button type="button" id="pasteBackupBtn">붙여 넣은 내용 불러오기</button></div>
         </div>
+        <h3 class="lfh" style="margin-top:14px">휴대폰에 앱처럼 설치하기</h3>
+        <p class="help"><b>아이폰</b> · 사파리로 열기 → 아래 공유 버튼 → "홈 화면에 추가"<br><b>갤럭시</b> · 크롬으로 열기 → 오른쪽 위 ⋮ → "홈 화면에 추가"<br>카톡에서 링크를 열었다면 먼저 "다른 브라우저로 열기"를 눌러 주세요.</p>
+        <p class="help" style="margin:0">새 버전이 나오면 화면 아래에 안내가 떠요. <b>새로고침</b>을 누르면 바로 적용되고, 입력한 내역은 그대로 남아요.</p>
       </div>
     </details>
   </div>
@@ -603,10 +686,10 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     {id:"peach",name:"피치",g:"파스텔",l:["#f6c3a0","#4a2c18","#b0612d","#fce6d6","#fdf3ec"],d:["#f6c3a0","#4a2c18","#f6c3a0","#3d2a1d","#1a1410"]},
     {id:"butter",name:"버터",g:"파스텔",l:["#efd78e","#3f3410","#8a6d12","#f8eecb","#fcf8ea"],d:["#efd78e","#3f3410","#efd78e","#39321a","#181610"]},
     {id:"rosebeige",name:"로즈베이지",g:"파스텔",l:["#d9b8a8","#3f2b22","#8f5e48","#f1e3dc","#f8f1ee"],d:["#d9b8a8","#3f2b22","#d9b8a8","#382a24","#181312"]},
-    {id:"rose",name:"로즈",g:"진한 색",l:["#ad3a5c","#ffffff","#ad3a5c","#f6e0e7","#f6eff1"],d:["#ef93ad","#2a1018","#ef93ad","#41222c","#1a1214"]},
-    {id:"orange",name:"주황",g:"진한 색",l:["#b4561e","#ffffff","#b4561e","#f6e5d8","#f6f0eb"],d:["#f0a66e","#2b1808","#f0a66e","#3f2a1c","#1a1511"]},
-    {id:"navy",name:"남색",g:"진한 색",l:["#2d4a86","#ffffff","#2d4a86","#dfe6f4","#eef0f5"],d:["#8ea9e8","#121b2e","#8ea9e8","#1f2a42","#11141b"]},
-    {id:"charcoal",name:"차콜",g:"진한 색",l:["#2f3a3f","#ffffff","#2f3a3f","#e2e7e9","#eef0f1"],d:["#c3cfd4","#161b1d","#c3cfd4","#283135","#121516"]}
+    {id:"rose",name:"로즈",g:"진한 색",l:["#a32d52","#ffffff","#a32d52","#f6dfe6","#f6eff1"],d:["#c2456b","#ffffff","#f29ab4","#41222c","#1a1214"]},
+    {id:"orange",name:"주황",g:"진한 색",l:["#c2541a","#ffffff","#b04c17","#f8e3d4","#f6f0eb"],d:["#c75d1f","#ffffff","#f0a66e","#3f2a1c","#1a1511"]},
+    {id:"navy",name:"남색",g:"진한 색",l:["#22396e","#ffffff","#22396e","#dde4f3","#eef0f5"],d:["#34549e","#ffffff","#9db6ee","#1f2a42","#11141b"]},
+    {id:"charcoal",name:"차콜",g:"진한 색",l:["#1e2528","#ffffff","#1e2528","#dfe3e5","#eceeef"],d:["#3d474c","#ffffff","#c3cfd4","#262d30","#0d1011"]}
   ];
   const DEFAULT_ACCENT="mint";
   (function(){
@@ -1143,7 +1226,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   function resetForm(){
     editingId=null; catTouched=false;
     setDate(todayStr()); $("place").value=""; setNum(amountEl,0); setNum(insEl,0); sel.value=""; setPay("card"); priv=false; updatePriv();
-    $("formTitle").textContent="사용내역 입력"; $("addBtn").textContent="추가"; $("cancelEdit").hidden=true;
+    $("formTitle").textContent="사용내역 입력"; $("addBtn").textContent="추가"; $("cancelEdit").hidden=true; $("clearBtn").hidden=false;
     $("form").classList.remove("editing"); note(""); updateIns();
   }
   function startEdit(id){
@@ -1151,7 +1234,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     editingId=id; confirmId=null; catTouched=true; $("pasteBox").hidden=true;
     setDate(e.date); $("place").value=e.place; setNum(amountEl,e.amount); sel.value=cats.includes(e.cat)?e.cat:""; setPay(e.pay); priv=!!e.private; updatePriv();
     updateIns(); setNum(insEl,e.ins||0);
-    $("formTitle").textContent="사용내역 수정"; $("addBtn").textContent="수정"; $("cancelEdit").hidden=false;
+    $("formTitle").textContent="사용내역 수정"; $("addBtn").textContent="수정"; $("cancelEdit").hidden=false; $("clearBtn").hidden=true;
     $("form").classList.add("editing");
     note(insCat&&e.cat===insCat?"실손보험금을 받았다면 보험금 칸에 넣고 수정을 눌러 주세요.":"고친 뒤 수정을 눌러 주세요.");
     render();
@@ -1167,7 +1250,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     let saved=null;
     if(editingId){
       saved=entries.find(x=>x.id===editingId)||null;
-      if(saved){ Object.assign(saved,{date,place,amount,cat,pay}); if(ins) saved.ins=ins; else delete saved.ins; if(priv) saved.private=true; else delete saved.private; }
+      if(saved){ delete saved.synced; Object.assign(saved,{date,place,amount,cat,pay}); if(ins) saved.ins=ins; else delete saved.ins; if(priv) saved.private=true; else delete saved.private; }
       toast("수정했어요");
     } else {
       saved={id:newId(),date,place,amount,cat,pay,created:Date.now()}; if(ins) saved.ins=ins; if(priv) saved.private=true; if(cloudOn) saved.uid=me;
@@ -1179,6 +1262,12 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     resetForm(); setDate(date); render();
   });
   $("cancelEdit").addEventListener("click",()=>{resetForm();render();});
+  $("clearBtn").addEventListener("click",()=>{
+    const keep=$("date").value;
+    resetForm(); if(keep) setDate(keep);
+    $("pasteBox").hidden=true; $("pasteText").value=""; sugOpen=false; renderSugg();
+    $("place").focus();
+  });
 
   /* ---------- navigation ---------- */
   function goMonth(y,m){ view={y,m}; confirmId=null; openStat=null; if(selDay&&!selDay.startsWith(monthPrefix())) selDay=null; render(); }
@@ -1231,7 +1320,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   let dl=null;
   (async()=>{try{dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null;}catch(e){dl=null;}})();
   const stamp=()=>todayStr().replace(/-/g,"");
-  const ownEntries=()=>entries.filter(isMine).map(e=>{const c=Object.assign({},e);delete c.uid;return c;});
+  const ownEntries=()=>entries.filter(isMine).map(e=>{const c=Object.assign({},e);delete c.uid;delete c.synced;return c;});
   const backupJson=()=>JSON.stringify({app:"gagyebu",v:4,entries:ownEntries(),rules,cats,insCat});
   async function offer(filename,data){
     if(!entries.length&&!rules.length){toast("백업할 내용이 아직 없어요");return;}
@@ -1301,7 +1390,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     if(/code_not_found/.test(m)) return "초대 코드를 찾지 못했어요. 코드를 다시 확인해 주세요.";
     if(/household_full/.test(m)) return "이 가족은 이미 6명이 연결돼 있어요.";
     if(/cannot_delete_default/.test(m)) return "'기타'는 지울 수 없어요.";
-    if(/Could not find the function|does not exist|relation|schema cache/i.test(m)) return "서버 준비가 덜 됐어요. Supabase에서 SQL을 모두 실행했는지 확인해 주세요.";
+    if(/Could not find the function|does not exist|relation|schema cache/i.test(m)) return "서버 준비가 덜 됐어요. Supabase에서 SQL을 모두 실행했는지 확인해 주세요. ("+m+")";
     if(/fetch|network|Failed|Load failed/i.test(m)) return "인터넷 연결을 확인해 주세요.";
     return m||"알 수 없는 오류가 났어요.";
   }
@@ -1410,7 +1499,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     try{
       if(cloudOn&&me!==user.id) goLocal();
       const wasLocal=!cloudOn;
-      const localE=wasLocal?entries.map(e=>Object.assign({},e)):[], localR=wasLocal?rules.slice():[], localC=wasLocal?cats.slice():[];
+      const localE=wasLocal?entries.filter(e=>!e.synced).map(e=>{const c=Object.assign({},e);delete c.synced;return c;}):[], localR=wasLocal?rules.slice():[], localC=wasLocal?cats.slice():[];
       me=user.id;
       if(wasLocal) outbox=loadJSON(OUTBOX+me)||[];
       renderSync();
@@ -1442,7 +1531,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     }finally{ starting=false; render(); }
   }
   function goLocal(){
-    const own=ownEntries();
+    const own=ownEntries().map(e=>Object.assign(e,{synced:true}));
     if(channel&&sb) sb.removeChannel(channel);
     channel=null; live=false; lsDel(CACHE);
     if(me){ lsDel("gagyebu.migrated."+me); if(!outbox.length) lsDel(OUTBOX+me); }
@@ -1468,7 +1557,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     renderSync();
   }
   function showAuthErr(m){
-    const t=String(m).replace(/\+/g," ");
+    let t=String(m).replace(/\+/g," "); try{ t=decodeURIComponent(t); }catch(e){}
     let k="로그인하지 못했어요: "+t;
     if(/exchange external code|invalid_client|unauthorized_client/i.test(t)) k="구글 연결 정보가 맞지 않아요. Supabase의 Google 설정에 넣은 Client ID와 Secret을 다시 확인해 주세요. ("+t+")";
     else if(/code verifier|flow state|invalid flow/i.test(t)) k="로그인을 시작한 화면과 돌아온 화면이 달라요. 같은 브라우저에서 다시 로그인해 주세요. ("+t+")";
@@ -1484,7 +1573,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     }
     logoutArmed=false; goLocal(); signedIn=false; syncErr="";
     try{ await sb.auth.signOut(); }catch(e){}
-    render(); toast("로그아웃했어요. 내 내역은 이 휴대폰에 남아 있어요");
+    render(); toast("로그아웃했어요. 다시 로그인하면 모든 내역이 그대로 보여요");
   }
 
   function setSync(){
@@ -1506,6 +1595,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     $("syncOut").hidden=!canCloud||inState;
     $("syncIn").hidden=!canCloud||!inState;
     updatePriv();
+    $("bkLocal").hidden=cloudOn; $("bkCloud").hidden=!cloudOn;
     if(!inState){ $("syncTag").textContent=""; return; }
     const meM=members.find(m=>m.user_id===me);
     if(document.activeElement!==$("myName")) $("myName").value=meM?meM.display_name:"";
@@ -1590,6 +1680,131 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&cloudReady){ flush(); pullAll(); } });
   setInterval(()=>{ if(cloudOn&&outbox.length) flush(); },20000);
 
+
+  /* ---------- 앱 잠금 ---------- */
+  const LKEY="gagyebu.lock";
+  let lockCfg=loadJSON(LKEY)||{on:false};
+  let pinBuf="", wrong=0, waitUntil=0, hiddenAt=0, lockFormMode=null;
+  async function hashPin(pin,salt){
+    const data=new TextEncoder().encode(salt+":"+pin);
+    if(window.crypto&&crypto.subtle){
+      const h=await crypto.subtle.digest("SHA-256",data);
+      return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("");
+    }
+    let x=0; for(const b of data){ x=((x<<5)-x+b)|0; } return "f"+(x>>>0).toString(16);
+  }
+  const newSalt=()=>{ try{ return [...crypto.getRandomValues(new Uint8Array(12))].map(b=>b.toString(16).padStart(2,"0")).join(""); }catch(e){ return String(Math.random()).slice(2); } };
+  const isLocked=()=>document.documentElement.classList.contains("locked");
+  function saveLock(){ lsSet(LKEY,JSON.stringify(lockCfg)); }
+  function lockNow(){
+    if(!lockCfg.on) return;
+    pinBuf=""; document.documentElement.classList.add("locked");
+    $("lockForgot").hidden=true; $("keypad").hidden=false; drawDots(); lockMsg();
+    if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  }
+  function unlock(){ document.documentElement.classList.remove("locked"); pinBuf=""; wrong=0; }
+  function drawDots(){ [...$("lockDots").children].forEach((d,i)=>d.classList.toggle("on",i<pinBuf.length)); }
+  function lockMsg(t,err){
+    const m=$("lockMsg");
+    m.textContent=t||"비밀번호 4자리를 입력해 주세요"; m.classList.toggle("err",!!err);
+  }
+  async function pressKey(k){
+    if(!isLocked()) return;
+    if(Date.now()<waitUntil) return;
+    if(k==="del"){ pinBuf=pinBuf.slice(0,-1); drawDots(); return; }
+    if(pinBuf.length>=4) return;
+    pinBuf+=k; drawDots();
+    if(pinBuf.length<4) return;
+    const ok=(await hashPin(pinBuf,lockCfg.salt))===lockCfg.hash;
+    if(ok){ unlock(); return; }
+    wrong++; pinBuf="";
+    const box=$("lockDots"); box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake");
+    setTimeout(drawDots,250);
+    if(wrong>=5){
+      waitUntil=Date.now()+30000;
+      const tick=()=>{ const s=Math.ceil((waitUntil-Date.now())/1000); if(s>0){ lockMsg(s+"초 뒤에 다시 입력할 수 있어요",true); setTimeout(tick,500); } else { wrong=0; lockMsg(); } };
+      tick();
+    } else lockMsg("비밀번호가 맞지 않아요 ("+wrong+"/5)",true);
+  }
+  // keypad
+  [1,2,3,4,5,6,7,8,9,"forgot",0,"del"].forEach(k=>{
+    const b=el("button","key"+(k==="forgot"?" sm":"")+(k==="del"?" sm":"")); b.type="button";
+    if(k==="forgot") b.textContent="잊었어요";
+    else if(k==="del"){ b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="M17 9l-5 6M12 9l5 6"/></svg>'; b.setAttribute("aria-label","지우기"); }
+    else b.textContent=String(k);
+    b.addEventListener("click",()=>{ if(k==="forgot") showForgot(); else pressKey(k==="del"?"del":String(k)); });
+    $("keypad").appendChild(b);
+  });
+  document.addEventListener("keydown",ev=>{
+    if(!isLocked()) return;
+    if(/^[0-9]$/.test(ev.key)){ ev.preventDefault(); pressKey(ev.key); }
+    else if(ev.key==="Backspace"){ ev.preventDefault(); pressKey("del"); }
+  });
+  function showForgot(){
+    $("keypad").hidden=true; $("lockForgot").hidden=false;
+    const cloud=cloudOn||signedIn||!!lsGet(SB_SESSION);
+    $("forgotText").textContent=cloud
+      ? "잠금을 풀면 이 기기에서 로그아웃돼요. 내역은 서버에 그대로 있어서, 구글 계정으로 다시 로그인하면 모두 돌아와요."+(outbox.length?" (아직 서버에 못 올린 변경 "+outbox.length+"건은 사라져요.)":"")
+      : "이 기기에만 저장된 가계부라서, 잠금을 풀려면 이 기기의 내역과 설정을 모두 지워야 해요. 지운 내역은 되돌릴 수 없어요.";
+    $("forgotYes").textContent=cloud?"로그아웃하고 잠금 풀기":"모두 지우고 잠금 풀기";
+  }
+  $("forgotNo").addEventListener("click",()=>{ $("lockForgot").hidden=true; $("keypad").hidden=false; lockMsg(); });
+  $("forgotYes").addEventListener("click",async()=>{
+    try{ if(sb) await sb.auth.signOut(); }catch(e){}
+    try{
+      Object.keys(localStorage).filter(k=>/^gagyebu\./.test(k)||/^sb-.*-auth-token/.test(k)).forEach(k=>{ if(k!=="gagyebu.accent") localStorage.removeItem(k); });
+    }catch(e){}
+    location.reload();
+  });
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState==="hidden") hiddenAt=Date.now();
+    else if(lockCfg.on&&hiddenAt&&Date.now()-hiddenAt>=(lockCfg.after||0)*1000) lockNow();
+  });
+
+  // settings UI
+  function renderLock(){
+    const on=!!lockCfg.on;
+    $("lockTag").textContent=on?"사용 중":"";
+    $("lockState").textContent=on?"앱을 열 때 비밀번호를 물어봐요.":"잠금을 사용하지 않고 있어요.";
+    $("lockOnBtn").hidden=on||!!lockFormMode;
+    $("lockOpts").hidden=!on||!!lockFormMode;
+    if(on) $("lockAfter").value=String(lockCfg.after||0);
+    const F=$("lockForm"); F.hidden=!lockFormMode;
+    if(lockFormMode){
+      $("pinCurRow").hidden=lockFormMode==="set";
+      $("pinNewRow").hidden=lockFormMode==="off";
+      $("pinNew2Row").hidden=lockFormMode==="off";
+      $("lockFormTitle").textContent=lockFormMode==="set"?"새 비밀번호 정하기":lockFormMode==="change"?"비밀번호 바꾸기":"잠금 끄기";
+      $("lockSave").textContent=lockFormMode==="off"?"잠금 끄기":"저장";
+    }
+  }
+  function openLockForm(mode){ lockFormMode=mode; ["pinCur","pinNew","pinNew2"].forEach(id=>$(id).value=""); renderLock(); setTimeout(()=>$(mode==="set"?"pinNew":"pinCur").focus(),0); }
+  ["pinCur","pinNew","pinNew2"].forEach(id=>$(id).addEventListener("input",()=>{ $(id).value=$(id).value.replace(/\D/g,"").slice(0,4); }));
+  $("lockOnBtn").addEventListener("click",()=>openLockForm("set"));
+  $("lockChange").addEventListener("click",()=>openLockForm("change"));
+  $("lockOffBtn").addEventListener("click",()=>openLockForm("off"));
+  $("lockCancel").addEventListener("click",()=>{ lockFormMode=null; renderLock(); });
+  $("lockAfter").addEventListener("change",()=>{ lockCfg.after=parseInt($("lockAfter").value,10)||0; saveLock(); toast("다시 잠그는 시간을 바꿨어요"); });
+  $("lockForm").addEventListener("submit",async ev=>{
+    ev.preventDefault();
+    const cur=$("pinCur").value, n1=$("pinNew").value, n2=$("pinNew2").value;
+    if(lockFormMode!=="set"){
+      if(cur.length!==4){ toast("지금 비밀번호 4자리를 입력해 주세요"); return; }
+      if((await hashPin(cur,lockCfg.salt))!==lockCfg.hash){ toast("지금 비밀번호가 맞지 않아요"); $("pinCur").value=""; $("pinCur").focus(); return; }
+    }
+    if(lockFormMode==="off"){
+      lockCfg={on:false}; saveLock(); lockFormMode=null; renderLock(); toast("잠금을 껐어요"); return;
+    }
+    if(n1.length!==4){ toast("새 비밀번호 4자리를 입력해 주세요"); return; }
+    if(n1!==n2){ toast("새 비밀번호 두 개가 서로 달라요"); $("pinNew2").value=""; $("pinNew2").focus(); return; }
+    const salt=newSalt();
+    lockCfg={on:true,salt,hash:await hashPin(n1,salt),after:lockFormMode==="set"?60:(lockCfg.after||0)};
+    const was=lockFormMode; saveLock(); lockFormMode=null; renderLock();
+    toast(was==="set"?"잠금을 켰어요. 다음에 앱을 열 때부터 비밀번호를 물어봐요":"비밀번호를 바꿨어요");
+  });
+  renderLock();
+  if(lockCfg.on) lockNow(); else unlock();
+
   refreshSelects(); resetForm(); render(); initCloud();
 })();
 </script>
@@ -1601,7 +1816,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-2";
+  var APP_VERSION="2026.11.11-7";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
