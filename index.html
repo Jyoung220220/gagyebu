@@ -851,6 +851,7 @@ html.locked .wrap{visibility:hidden}
 <div class="toast" id="toast" hidden></div>
 
 <script src="supabase.js"></script>
+<script>if(!(window.supabase&&window.supabase.createClient))document.write('<script src="supabase.js?r='+Date.now()+'"><\/script>');</script>
 <script>
 (function(){
   const KEY="gagyebu.v2", OLD="gagyebu.v1", RKEY="gagyebu.rules", CKEY="gagyebu.cats", IKEY="gagyebu.inscat", CARDKEY="gagyebu.cards";
@@ -2851,7 +2852,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-01";
+  var APP_VERSION="2026.11.12-02";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
