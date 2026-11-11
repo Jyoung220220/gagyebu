@@ -330,6 +330,9 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .dpgrid button.cur{background:var(--accent);color:var(--accent-ink);font-weight:700}
 .ctitle{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .autotag{font-size:10.5px;font-weight:700;border-radius:5px;padding:1px 5px;line-height:1.4;color:var(--muted);background:var(--field);border:1px solid var(--line)}
+.pushbox{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--field)}
+.pushrow{display:flex;align-items:center;gap:6px;font-size:13px}
+.pushrow .sp{flex:1}
 .autotag.on{color:var(--accent-text);background:var(--accent-soft);border-color:transparent}
 .autodate{font-size:11px;color:var(--muted)}
 .row-btns button:disabled{opacity:.45;cursor:default}
@@ -667,6 +670,10 @@ html.locked .wrap{visibility:hidden}
             <div class="confirm" id="autoResetConfirm" hidden style="margin-top:8px"><span>새 키를 만들면 지금 단축어는 멈춰요. 단축어의 p_key를 새 키로 바꿔야 해요.</span><button type="button" class="btn-plain" id="autoResetNo">취소</button><button type="button" class="btn-danger" id="autoResetYes">새로 만들기</button></div>
             <p class="help" style="margin:8px 0 0">연결 키는 내 알림함에 <b>넣기만</b> 할 수 있는 열쇠라 내역을 볼 수는 없어요. 다른 사람에게 알려졌다면 새로 만들어 주세요.</p>
           </div>
+        </div>
+        <div class="pushbox" id="pushBox" hidden>
+          <div class="pushrow"><b>새 승인내역 알림 · 아이콘 배지</b><span class="autotag" id="pushState">OFF</span><span class="sp"></span><button type="button" class="sbtn pri" id="pushOn" hidden>알림 켜기</button><button type="button" class="sbtn" id="pushOff" hidden>끄기</button></div>
+          <p class="help" id="pushHelp" style="margin:6px 0 0"></p>
         </div>
         <p class="help" style="margin:8px 0 0">문자 붙여넣기 때 카드사와 끝자리로 카드를 알아봐요. 카드사마다 한 장씩이면 끝자리는 비워 두셔도 돼요. 실적을 적으면 통계 → 카드별에서 이번 달 실적을 보여줘요.</p>
       </div>
@@ -2611,6 +2618,11 @@ html.locked .wrap{visibility:hidden}
     renderInbox();
   }
   let inboxSeen=false;
+  let openInboxReq=new URLSearchParams(location.search).get("inbox")==="1";
+  if(openInboxReq){ try{ history.replaceState(null,"",location.pathname); }catch(e){} }
+  if("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message",ev=>{
+    if(ev.data&&ev.data.type==="open-inbox"){ openInboxReq=true; pullInbox().then(()=>{ if(openInboxReq&&inbox.length){ openInboxReq=false; inboxOpen=true; tab="list"; render(); } }); }
+  });
   // 문자 자동 입력이 들어온 카드에 표시 남기기
   function markAutoCards(){
     let changed=false;
@@ -2632,7 +2644,10 @@ html.locked .wrap{visibility:hidden}
     entries.push(e); commitEntry(e);
     removeInbox(item.id);
   }
+  function setBadge(n){ try{ if(navigator.setAppBadge){ if(n) navigator.setAppBadge(n).catch(()=>{}); else navigator.clearAppBadge().catch(()=>{}); } }catch(e){} }
   function renderInbox(){
+    setBadge(cloudOn?inbox.length:0);
+    if(openInboxReq&&cloudOn&&inbox.length){ openInboxReq=false; inboxOpen=true; if(tab!=="list"){ tab="list"; setTimeout(render,0); } }
     const bar=$("inboxBar"), P=$("inboxPanel");
     const show=cloudOn&&inbox.length>0;
     bar.hidden=!show; if(!show){ P.hidden=true; inboxOpen=false; return; }
@@ -2717,7 +2732,62 @@ html.locked .wrap{visibility:hidden}
   const RPC_URL=SB_URL+"/rest/v1/rpc/push_card_text";
   function renderAuto(){
     $("autoOff").hidden=cloudOn; $("autoOn").hidden=!cloudOn;
+    $("pushBox").hidden=!cloudOn; if(cloudOn) renderPush(true);
   }
+  // 새 승인내역 알림 + 아이콘 배지 (이 휴대폰에만 적용)
+  const PUSH_FN=SB_URL+"/functions/v1/push-inbox";
+  const pushOK=()=>("serviceWorker" in navigator)&&("PushManager" in window)&&("Notification" in window);
+  const isStandalone=()=>window.navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
+  const isIOS=()=>/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  async function getPushSub(){ try{ const reg=await navigator.serviceWorker.getRegistration(); return reg&&reg.pushManager?await reg.pushManager.getSubscription():null; }catch(e){ return null; } }
+  function keyBytes(b64){ const s=atob(b64.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((b64.length+3)%4)); return Uint8Array.from(s,c=>c.charCodeAt(0)); }
+  async function saveSub(sub){
+    const j=sub.toJSON();
+    const r=await sb.rpc("push_subscribe",{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});
+    if(r.error) throw r.error;
+  }
+  async function renderPush(resync){
+    const st=$("pushState"), on=$("pushOn"), off=$("pushOff"), help=$("pushHelp");
+    const show=(isOn,btn,msg)=>{ st.textContent=isOn?"ON":"OFF"; st.classList.toggle("on",isOn); on.hidden=btn!=="on"; off.hidden=btn!=="off"; help.textContent=msg; };
+    if(!pushOK()){
+      if(isIOS()&&!isStandalone()) return show(false,"","홈 화면에 설치한 가계부 앱에서 켤 수 있어요. 홈 화면의 가계부 아이콘으로 열어서 여기서 '알림 켜기'를 눌러 주세요.");
+      return show(false,"","이 기기에서는 알림을 쓸 수 없어요. 아이폰은 iOS 16.4 이상, 홈 화면 앱에서 쓸 수 있어요.");
+    }
+    if(Notification.permission==="denied") return show(false,"","알림이 꺼져 있어요. 아이폰 설정 → 알림 → 가계부에서 '알림 허용'을 켠 다음 다시 눌러 주세요.");
+    const sub=await getPushSub();
+    if(sub&&Notification.permission==="granted"){
+      if(resync) saveSub(sub).catch(()=>{});
+      return show(true,"off","새 승인 문자가 들어오면 알림이 뜨고, 앱 아이콘에 확인할 개수가 숫자로 보여요. 이 휴대폰에만 적용돼요.");
+    }
+    show(false,"on","켜 두면 앱을 열지 않아도 새 승인내역이 들어온 걸 알림과 아이콘 숫자로 알 수 있어요.");
+  }
+  $("pushOn").addEventListener("click",async()=>{
+    const btn=$("pushOn"); btn.disabled=true;
+    try{
+      const perm=await Notification.requestPermission();
+      if(perm!=="granted"){ toast("알림을 허용해야 켤 수 있어요"); return; }
+      let r=await sb.rpc("vapid_public");
+      if(r.error){ toast("서버 준비가 덜 됐어요. Supabase에서 SQL 7단계를 실행해 주세요"); return; }
+      let pub=r.data;
+      if(!pub){
+        try{ const f=await fetch(PUSH_FN,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"init"})}); const j=await f.json(); pub=j.public; }catch(e){}
+        if(!pub){ toast("알림 함수(push-inbox)가 아직 없어요. Supabase에 배포해 주세요"); return; }
+      }
+      const reg=await navigator.serviceWorker.ready;
+      let sub=await reg.pushManager.getSubscription();
+      if(sub&&sub.options&&sub.options.applicationServerKey){ /* 그대로 사용 */ }
+      if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(pub)});
+      await saveSub(sub);
+      setBadge(inbox.length);
+      toast("알림을 켰어요");
+    }catch(e){ toast("알림을 켜지 못했어요: "+(e&&e.message?e.message:e)); }
+    finally{ btn.disabled=false; renderPush(false); }
+  });
+  $("pushOff").addEventListener("click",async()=>{
+    const sub=await getPushSub();
+    if(sub){ try{ await sb.rpc("push_unsubscribe",{p_endpoint:sub.endpoint}); }catch(e){} try{ await sub.unsubscribe(); }catch(e){} }
+    setBadge(0); toast("이 휴대폰 알림을 껐어요"); renderPush(false);
+  });
   async function loadKey(reset){
     const r=await sb.rpc("get_push_key",{p_reset:!!reset});
     if(r.error){ toast(errMsg(r.error)); return false; }
@@ -2781,7 +2851,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.11-23";
+  var APP_VERSION="2026.11.12-01";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
