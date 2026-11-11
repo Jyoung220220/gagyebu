@@ -460,6 +460,29 @@ html.locked .wrap{visibility:hidden}
 .fold-body>.subh:first-child{margin-top:0}
 #lockForm{border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
 </style>
+<script>
+/* 안전장치: 앱이 열리다 멈추면 빈 화면 대신 안내를 보여줘요 (저장된 내역은 지우지 않아요) */
+(function(){
+  var shown=false;
+  function show(msg){
+    if(window.__appReady||shown) return; shown=true;
+    try{ document.documentElement.classList.remove("locked"); }catch(e){}
+    var d=document.createElement("div");
+    d.setAttribute("role","alert");
+    d.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(10,16,14,.55);display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,system-ui,sans-serif";
+    d.innerHTML='<div style="background:#fff;color:#18231f;border-radius:16px;padding:20px;max-width:340px;box-shadow:0 12px 40px rgba(0,0,0,.25)">'+
+      '<b style="font-size:16px">앱을 여는 중 문제가 생겼어요</b>'+
+      '<p style="font-size:13.5px;line-height:1.55;margin:8px 0 12px;color:#44524c">내역과 로그인 정보는 지워지지 않았어요. 서버에도 그대로 있어요.<br>다시 열기를 눌러 주세요. 계속 이러면 이 화면을 캡처해서 알려 주세요.</p>'+
+      '<code style="display:block;font-size:11px;color:#8a958f;word-break:break-all;margin-bottom:12px"></code>'+
+      '<button type="button" style="width:100%;height:42px;border:0;border-radius:10px;background:#1f6b57;color:#fff;font-size:15px;font-weight:700">다시 열기</button></div>';
+    d.querySelector("code").textContent=String(msg||"").slice(0,200);
+    d.querySelector("button").onclick=function(){ location.reload(); };
+    (document.body||document.documentElement).appendChild(d);
+  }
+  window.addEventListener("error",function(e){ show(e&&(e.message||(e.error&&e.error.message))); });
+  window.addEventListener("load",function(){ setTimeout(function(){ if(!window.__appReady) show("시작하지 못했어요"); },4000); });
+})();
+</script>
 <script>try{var L=JSON.parse(localStorage.getItem("gagyebu.lock")||"null");if(L&&L.on)document.documentElement.classList.add("locked");}catch(e){}</script>
 
 <div class="lockov" id="lockOv" role="dialog" aria-label="앱 잠금">
@@ -911,6 +934,8 @@ html.locked .wrap{visibility:hidden}
   const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
   const lsDel=k=>{try{localStorage.removeItem(k);}catch(e){}};
   const loadJSON=k=>{try{return JSON.parse(localStorage.getItem(k)||"null");}catch(e){return null;}};
+  const GKEY="gagyebu.groups";
+  let groups=(function(){ const g=loadJSON(GKEY); return Array.isArray(g)?g:[]; })();
   function persist(){
     try{
       try{ localStorage.setItem(GKEY,JSON.stringify(groups)); }catch(e){}
@@ -1016,8 +1041,6 @@ html.locked .wrap{visibility:hidden}
   let pay="card", editingId=null, confirmId=null, filter="all", tab="list", catTouched=false;
   let listMode="list", selDay=null, query="", priv=false, who="me", statsWho="me", searchYear="all", sugOpen=false, filterCard="all", cardScope="month";
   let statsMode="month", weekScope="month", openStat=null, statsGroup="grp";
-  const GKEY="gagyebu.groups";
-  let groups=(function(){ const g=loadJSON(GKEY); return Array.isArray(g)?g:[]; })();
   let grpEdit=null, grpSel=[], grpNoCol=false;
   let catEdit=null, catConfirm=null, ruleEdit=null;
   const monthPrefix=()=>view.y+"-"+pad(view.m)+"-";
@@ -2841,7 +2864,7 @@ html.locked .wrap{visibility:hidden}
       }
     }catch(e){}
   }
-  refreshSelects(); resetForm(); render(); initCloud();
+  refreshSelects(); resetForm(); render(); window.__appReady=true; initCloud();
 })();
 </script>
 
@@ -2852,7 +2875,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-02";
+  var APP_VERSION="2026.11.12-03";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
