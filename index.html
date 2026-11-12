@@ -447,6 +447,13 @@ html[data-os="other"] b.os-android::before{content:"·"}
 .iconwarn.strong .cond{color:var(--danger);font-weight:700}
 .iconwarn.standalone-only{background:var(--cash-soft);color:var(--ink)}
 /* app lock */
+.splash{position:fixed;inset:0;z-index:9000;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px;text-align:center;transition:opacity .4s ease}
+.splash.out{opacity:0;pointer-events:none}
+.splash-ic{width:92px;height:92px;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.12);animation:splashPop .6s cubic-bezier(.2,.9,.3,1.3) both}
+.splash-msg{margin:0;font-size:clamp(19px,5.6vw,24px);line-height:1.5;font-weight:800;color:var(--ink);letter-spacing:-.02em;animation:splashUp .7s .15s ease-out both;word-break:keep-all}
+.splash-msg .hrt{color:#e0475b;margin-left:3px}
+@keyframes splashPop{from{transform:scale(.7);opacity:0}to{transform:none;opacity:1}}
+@keyframes splashUp{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
 .lockov{display:none;position:fixed;inset:0;z-index:100;background:var(--bg);align-items:center;justify-content:center;
   padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px))}
 html.locked .lockov{display:flex}
@@ -505,6 +512,23 @@ html.locked .wrap{visibility:hidden}
 </script>
 <script>try{var L=JSON.parse(localStorage.getItem("gagyebu.lock")||"null");if(L&&L.on)document.documentElement.classList.add("locked");}catch(e){}</script>
 
+<div class="splash" id="splash" aria-hidden="true">
+  <img class="splash-ic" id="splashIc" alt="" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiI+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIGZpbGw9IiNmZGVjZWIiLz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNTYgMjYyKSBzY2FsZSgwLjg2KSB0cmFuc2xhdGUoLTI1NiAtMjg4KSI+CiAgICA8ZWxsaXBzZSBjeD0iMjU2IiBjeT0iNDc2IiByeD0iMTUwIiByeT0iMTQiIGZpbGw9IiNmM2NmY2MiLz4KICAgIDxwYXRoIGQ9Ik0yMDAgMjM2IEMxMjIgMjgyIDk0IDM2MiAxMTggNDEyIEMxNDAgNDU2IDIwMCA0NzAgMjU2IDQ3MCBDMzEyIDQ3MCAzNzIgNDU2IDM5NCA0MTIgQzQxOCAzNjIgMzkwIDI4MiAzMTIgMjM2IFoiIGZpbGw9IiNkNjM0MmMiLz4KICAgIDxwYXRoIGQ9Ik0xNTAgMzAwIEMxMjYgMzQwIDEyMiAzODIgMTQwIDQxMCIgc3Ryb2tlPSIjZTg1ODRmIiBzdHJva2Utd2lkdGg9IjE2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIG9wYWNpdHk9Ii44Ii8+CiAgICA8cGF0aCBkPSJNMjAyIDIzMCBDMTgyIDE5MiAxNzAgMTUyIDE4NCAxMTggQzIwNiAxNDIgMjIyIDEzMCAyMzQgMTA2IEMyNDYgMTMyIDI2NiAxMzIgMjc4IDEwNiBDMjkwIDEzMCAzMDYgMTQyIDMyOCAxMTggQzM0MiAxNTIgMzMwIDE5MiAzMTAgMjMwIFoiIGZpbGw9IiNlNTQ3M2QiLz4KICAgIDxwYXRoIGQ9Ik0yMDYgMjIyIEMxOTYgMTk2IDE5MCAxNjggMTk2IDE0MCIgc3Ryb2tlPSIjZjA3YTcwIiBzdHJva2Utd2lkdGg9IjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPgogICAgPHJlY3QgeD0iMTkyIiB5PSIyMTQiIHdpZHRoPSIxMjgiIGhlaWdodD0iMzAiIHJ4PSIxNSIgZmlsbD0iI2IzMjQxZCIvPgogICAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjJjMTRlIiBzdHJva2Utd2lkdGg9IjEwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgICA8cGF0aCBkPSJNMjU2IDIyOSBDMjI2IDIwMCAxOTQgMjA2IDE5OCAyMjggQzIwMiAyNDggMjM2IDI0MCAyNTYgMjI5IFoiLz4KICAgICAgPHBhdGggZD0iTTI1NiAyMjkgQzI4NiAyMDAgMzE4IDIwNiAzMTQgMjI4IEMzMTAgMjQ4IDI3NiAyNDAgMjU2IDIyOSBaIi8+CiAgICAgIDxwYXRoIGQ9Ik0yNDggMjM2IEMyNDAgMjYyIDIzMCAyODIgMjIyIDMwMCIvPgogICAgICA8cGF0aCBkPSJNMjY0IDIzNiBDMjcyIDI2MiAyODIgMjgyIDI5MCAzMDAiLz4KICAgIDwvZz4KICAgIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjIyOSIgcj0iMTIiIGZpbGw9IiNmMmMxNGUiLz4KICAgIDxjaXJjbGUgY3g9IjIyMiIgY3k9IjMwNiIgcj0iOSIgZmlsbD0iI2YyYzE0ZSIvPgogICAgPGNpcmNsZSBjeD0iMjkwIiBjeT0iMzA2IiByPSI5IiBmaWxsPSIjZjJjMTRlIi8+CiAgICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIzNzAiIHI9IjU2IiBmaWxsPSIjZjJjMTRlIi8+CiAgICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIzNzAiIHI9IjQ0IiBmaWxsPSJub25lIiBzdHJva2U9IiNkNjM0MmMiIHN0cm9rZS13aWR0aD0iNCIvPgogICAgPHRleHQgeD0iMjU2IiB5PSIzOTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJOb3RvIFNlcmlmIENKSyBLUiwgTm90byBTYW5zIENKSyBLUiwgc2VyaWYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZvbnQtc2l6ZT0iNjAiIGZpbGw9IiNiMzI0MWQiPuemjzwvdGV4dD4KICA8L2c+Cjwvc3ZnPgo=">
+  <p class="splash-msg">우리 모두<br>건강한 부자가 될거야!<span class="hrt">♡</span></p>
+</div>
+<script src="supabase.js"></script>
+<script>if(!(window.supabase&&window.supabase.createClient))document.write('<script src="supabase.js?r='+Date.now()+'"><\/script>');</script>
+<script>
+(function(){
+  var sp=document.getElementById("splash"); if(!sp) return;
+  try{ var ic=JSON.parse(localStorage.getItem("gagyebu.icon")||"null"); if(ic&&ic.s180) document.getElementById("splashIc").src=ic.s180; }catch(e){}
+  var t0=Date.now(), done=false;
+  function hide(){ if(done) return; done=true; sp.classList.add("out"); setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); },450); }
+  window.addEventListener("load",function(){ setTimeout(hide,Math.max(0,1600-(Date.now()-t0))); });
+  setTimeout(hide,3500);
+  sp.addEventListener("click",hide);
+})();
+</script>
 <div class="lockov" id="lockOv" role="dialog" aria-label="앱 잠금">
   <div class="lockbox">
     <div class="lockico" id="lockIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
@@ -909,8 +933,6 @@ html.locked .wrap{visibility:hidden}
 </div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="supabase.js"></script>
-<script>if(!(window.supabase&&window.supabase.createClient))document.write('<script src="supabase.js?r='+Date.now()+'"><\/script>');</script>
 <script>
 (function(){
   const KEY="gagyebu.v2", OLD="gagyebu.v1", RKEY="gagyebu.rules", CKEY="gagyebu.cats", IKEY="gagyebu.inscat", CARDKEY="gagyebu.cards";
@@ -2970,7 +2992,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-11";
+  var APP_VERSION="2026.11.12-12";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
