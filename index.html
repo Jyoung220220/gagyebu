@@ -451,6 +451,7 @@ html[data-os="other"] b.os-android::before{content:"·"}
 .splash{position:fixed;inset:0;z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:24px;text-align:center;overflow:hidden;
   background:radial-gradient(120% 70% at 50% 38%,#fff4e8 0%,#ffe1d2 45%,#ffc9b8 100%);transition:opacity .45s ease,transform .45s ease}
 .splash.out{opacity:0;transform:scale(1.04);pointer-events:none}
+html.app-ready{background:var(--bg)}
 .splash-drop{position:relative;width:132px;height:132px}
 .splash-ic{width:132px;height:132px;border-radius:30px;display:block;box-shadow:0 14px 30px rgba(150,40,30,.22);animation:splashDrop .7s cubic-bezier(.25,.9,.3,1) both}
 .splash-shadow{position:absolute;left:50%;bottom:-18px;width:96px;height:14px;margin-left:-48px;border-radius:50%;background:rgba(150,40,30,.18);filter:blur(3px);animation:splashShadow .7s ease-out both}
@@ -531,7 +532,7 @@ html.locked .wrap{visibility:hidden}
   var sp=document.getElementById("splash"); if(!sp) return;
   try{ var ic=JSON.parse(localStorage.getItem("gagyebu.icon")||"null"); if(ic&&ic.s180) document.getElementById("splashIc").src=ic.s180; }catch(e){}
   var t0=Date.now(), done=false;
-  function hide(){ if(done) return; done=true; sp.classList.add("out"); setTimeout(function(){ try{ window.__syncBar&&window.__syncBar(); }catch(e){} },460); setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); },450); }
+  function hide(){ if(done) return; done=true; document.documentElement.classList.add("app-ready"); sp.classList.add("out"); setTimeout(function(){ try{ window.__syncBar&&window.__syncBar(); }catch(e){} },460); setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); },450); }
   window.addEventListener("load",function(){ setTimeout(hide,Math.max(0,1600-(Date.now()-t0))); });
   setTimeout(hide,4000);
   sp.addEventListener("click",hide);
@@ -3002,7 +3003,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-14";
+  var APP_VERSION="2026.11.12-15";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
