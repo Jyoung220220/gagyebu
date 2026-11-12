@@ -2895,6 +2895,7 @@ html.locked .wrap{visibility:hidden}
 
   // 탭을 바꾸면 그 탭은 처음 모습으로
   function resetTab(t){
+    setTimeout(()=>{ try{ const sc=t==="list"?$("lbody"):$("tab-"+t); if(sc) sc.scrollTop=0; }catch(e){} },0);
     try{
       if(t==="list"){
         filter="all"; filterCard="all"; who="me"; listMode="list"; selDay=null; query=""; searchYear="all"; $("q").value="";
@@ -2907,10 +2908,27 @@ html.locked .wrap{visibility:hidden}
         lockFormMode=null; renderLock();
         ["autoInfo","autoResetConfirm","cropBox","pwSetForm","leaveConfirm","fallbackBox"].forEach(id=>{ const n=$(id); if(n) n.hidden=true; });
         if(typeof renderRules==="function") renderRules(); if(typeof renderCardsSettings==="function") renderCardsSettings();
-        $("tab-settings").scrollTop=0;
+        if(window.__resetSettingsSpacer) window.__resetSettingsSpacer(); $("tab-settings").scrollTop=0;
       }
     }catch(e){}
   }
+  // 설정 메뉴를 펼치면 그 메뉴가 탭 바로 아래로 올라와서 내용이 바로 보이게
+  (function(){
+    const box=$("tab-settings");
+    const spacer=el("div"); spacer.setAttribute("aria-hidden","true"); box.appendChild(spacer);
+    function bringUp(d){
+      const target=d.getBoundingClientRect().top-box.getBoundingClientRect().top+box.scrollTop-4;
+      spacer.style.height="0px";
+      const need=target-(box.scrollHeight-box.clientHeight);
+      if(need>0) spacer.style.height=Math.ceil(need)+"px";
+      box.scrollTo({top:Math.max(0,target),behavior:"smooth"});
+    }
+    box.querySelectorAll("details.fold > summary").forEach(sm=>sm.addEventListener("click",()=>{
+      const d=sm.parentElement;
+      setTimeout(()=>{ if(d.open) bringUp(d); else spacer.style.height="0px"; },30);
+    }));
+    window.__resetSettingsSpacer=()=>{ spacer.style.height="0px"; };
+  })();
   refreshSelects(); resetForm(); render(); window.__appReady=true; initCloud();
 })();
 </script>
@@ -2922,7 +2940,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-07";
+  var APP_VERSION="2026.11.12-08";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
