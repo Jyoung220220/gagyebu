@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#d6342c">
+<meta name="theme-color" content="#eef8f4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="가계부">
@@ -84,7 +84,7 @@ button{cursor:pointer;font-size:13px}
 .totals{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px}
 .tot{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
 .tot span{display:block;font-size:11px;color:var(--muted)}
-.tot b{display:block;font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tot b{display:block;font-family:var(--font-num);font-variant-numeric:tabular-nums;font-weight:600;font-size:clamp(12.5px,3.9vw,15px);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tot.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .tot.main span{color:inherit;opacity:.8}
 .tot.card b{color:var(--card)} .tot.cash b{color:var(--cash)}
@@ -330,6 +330,12 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .dpgrid button.cur{background:var(--accent);color:var(--accent-ink);font-weight:700}
 .ctitle{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .autotag{font-size:10.5px;font-weight:700;border-radius:5px;padding:1px 5px;line-height:1.4;color:var(--muted);background:var(--field);border:1px solid var(--line)}
+html[data-os="android"] .os-ios, html[data-os="ios"] .os-android{display:none!important}
+html[data-os="other"] b.os-android::before{content:"·"}
+.ostabs{display:flex;gap:4px;margin:8px 0}
+.ostabs button{flex:1;height:30px;border:1px solid var(--line);background:var(--field);border-radius:8px;font-size:12.5px;color:var(--muted)}
+.ostabs button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-text);border-color:transparent;font-weight:700}
+#autoInfo[data-v="ios"] .v-android, #autoInfo[data-v="android"] .v-ios{display:none}
 .pushbox{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--field)}
 .pushrow{display:flex;align-items:center;gap:6px;font-size:13px}
 .pushrow .sp{flex:1}
@@ -461,6 +467,8 @@ html.locked .wrap{visibility:hidden}
 #lockForm{border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
 </style>
 <script>
+/* 기기 구분: 아이폰 / 안드로이드 / 그 밖(PC) */
+(function(){ var u=navigator.userAgent||""; var os=/iP(hone|ad|od)/.test(u)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)?"ios":/Android/i.test(u)?"android":"other"; document.documentElement.setAttribute("data-os",os); })();
 /* 안전장치: 앱이 열리다 멈추면 빈 화면 대신 안내를 보여줘요 (저장된 내역은 지우지 않아요) */
 (function(){
   var shown=false;
@@ -670,16 +678,29 @@ html.locked .wrap{visibility:hidden}
           </div>
           <div class="row-btns" style="justify-content:flex-end;margin-top:10px"><button type="button" id="cfCancel" hidden>취소</button><button type="submit" class="pri" id="cfSave">카드 등록</button></div>
         </form>
-        <h3 class="lfh subh">2. 카드 승인 문자 자동 입력 <small>아이폰 단축어</small></h3>
-        <p class="help" id="autoOff">4. 함께 쓰기에서 로그인하면 쓸 수 있어요. 카드 승인 문자가 오면 단축어가 가계부 알림함으로 보내줘요.</p>
+        <h3 class="lfh subh">2. 카드 승인 문자 자동 입력</h3>
+        <p class="help" id="autoOff">4. 함께 쓰기에서 로그인하면 쓸 수 있어요. 카드 승인 문자가 오면 휴대폰 자동화(아이폰 단축어 · 갤럭시 MacroDroid)가 가계부 알림함으로 보내줘요.</p>
         <div id="autoOn" hidden>
-          <p class="help">카드 승인 <b>문자(SMS)</b>가 오면 아이폰 단축어가 가계부 <b>📥 카드 알림</b>으로 보내요. 내역 탭에서 확인하고 추가하면 돼요. 카톡 알림톡은 지금처럼 <b>문자 붙여넣기</b>를 써 주세요.</p>
+          <p class="help os-ios">카드 승인 <b>문자(SMS)</b>가 오면 아이폰 <b>단축어</b>가 가계부 <b>📥 카드 알림</b>으로 보내요. 내역 탭에서 확인하고 추가하면 돼요. 아이폰은 카톡 알림을 자동으로 읽을 수 없어서, 카톡 알림톡은 <b>문자 붙여넣기</b>를 써 주세요.</p>
+          <p class="help os-android">카드 승인 <b>문자</b>와 <b>카톡 알림톡</b>이 오면 자동화 앱 <b>MacroDroid</b>가 가계부 <b>📥 카드 알림</b>으로 보내요. 내역 탭에서 확인하고 추가하면 돼요.</p>
           <div class="row-btns"><button type="button" id="autoShow">연결 정보 · 설정 방법</button><button type="button" id="autoTest">테스트 알림 보내기</button></div>
-          <div id="autoInfo" hidden>
-            <div class="kv"><span>주소 (URL)</span><code id="kvUrl"></code><button type="button" class="sbtn" data-copy="kvUrl">복사</button></div>
+          <div id="autoInfo" hidden data-v="ios">
+            <div class="ostabs" role="group" aria-label="휴대폰 종류"><button type="button" data-v="ios">아이폰</button><button type="button" data-v="android">갤럭시·안드로이드</button></div>
+            <div class="kv v-ios"><span>주소 (URL)</span><code id="kvUrl"></code><button type="button" class="sbtn" data-copy="kvUrl">복사</button></div>
+            <div class="kv v-android"><span>주소 (URL)</span><code id="kvUrl2"></code><button type="button" class="sbtn" data-copy="kvUrl2">복사</button></div>
             <div class="kv"><span>헤더 apikey</span><code id="kvApi"></code><button type="button" class="sbtn" data-copy="kvApi">복사</button></div>
-            <div class="kv"><span>내 연결 키 (p_key)</span><code id="kvKey"></code><button type="button" class="sbtn" data-copy="kvKey">복사</button></div>
-            <ol class="steps">
+            <div class="kv"><span class="v-ios">내 연결 키 (p_key)</span><span class="v-android">내 연결 키 (x-key)</span><code id="kvKey"></code><button type="button" class="sbtn" data-copy="kvKey">복사</button></div>
+            <ol class="steps v-android">
+              <li>Play 스토어에서 <b>MacroDroid</b> 설치 → 열고 안내에 따라 <b>알림 접근 권한</b>을 허용</li>
+              <li><b>매크로 추가(+)</b> → 트리거 <b>+</b> → <b>알림(Notification)</b> → <b>알림 수신(Notification Received)</b></li>
+              <li>앱 선택에서 <b>메시지</b>(문자 앱)와 <b>카카오톡</b>을 고르고, 내용 조건은 <b>포함(Contains)</b> → <code>승인</code></li>
+              <li>액션 <b>+</b> → <b>웹 상호작용(Web Interactions)</b> → <b>HTTP 요청(HTTP Request)</b> → 방법 <b>POST</b>, URL에 위의 <b>주소</b> 붙여넣기</li>
+              <li><b>헤더(Headers)</b> 2개 추가: <code>apikey</code> = 위의 <b>헤더 apikey</b>, <code>x-key</code> = <b>내 연결 키</b></li>
+              <li><b>본문(Body)</b>: 콘텐츠 유형 <code>text/plain</code>, 내용은 매직 텍스트 <b>[notification]</b>(알림 내용) 넣기</li>
+              <li>매크로 이름을 <b>가계부</b>로 저장 · 갤럭시 <b>설정 → 애플리케이션 → MacroDroid → 배터리 → 제한 없음</b>으로 바꿔야 잠들지 않아요</li>
+              <li>완료 · 이제 승인 문자나 카톡이 오면 <b>📥 카드 알림</b>에 들어와요 (Supabase SQL 8단계가 필요해요)</li>
+            </ol>
+            <ol class="steps v-ios">
               <li>아이폰 <b>단축어</b> 앱 → 아래 <b>자동화</b> → 오른쪽 위 <b>+</b> → <b>메시지</b></li>
               <li><b>메시지에 포함</b>에 <code>승인</code> 입력 (보낸 사람에 카드사 번호를 넣으면 더 정확해요) → <b>즉시 실행</b> 선택 → 다음</li>
               <li><b>새로운 빈 자동화</b> → 동작 검색에서 <b>URL 콘텐츠 가져오기</b> 추가</li>
@@ -690,7 +711,7 @@ html.locked .wrap{visibility:hidden}
               <li>완료 · 이제 승인 문자가 오면 <b>📥 카드 알림</b>에 들어와요</li>
             </ol>
             <div class="row-btns"><button type="button" id="autoReset">연결 키 새로 만들기</button></div>
-            <div class="confirm" id="autoResetConfirm" hidden style="margin-top:8px"><span>새 키를 만들면 지금 단축어는 멈춰요. 단축어의 p_key를 새 키로 바꿔야 해요.</span><button type="button" class="btn-plain" id="autoResetNo">취소</button><button type="button" class="btn-danger" id="autoResetYes">새로 만들기</button></div>
+            <div class="confirm" id="autoResetConfirm" hidden style="margin-top:8px"><span>새 키를 만들면 지금 연결된 단축어나 MacroDroid가 멈춰요. 거기에 넣은 연결 키를 새 키로 바꿔야 해요.</span><button type="button" class="btn-plain" id="autoResetNo">취소</button><button type="button" class="btn-danger" id="autoResetYes">새로 만들기</button></div>
             <p class="help" style="margin:8px 0 0">연결 키는 내 알림함에 <b>넣기만</b> 할 수 있는 열쇠라 내역을 볼 수는 없어요. 다른 사람에게 알려졌다면 새로 만들어 주세요.</p>
           </div>
         </div>
@@ -710,7 +731,7 @@ html.locked .wrap{visibility:hidden}
           <div class="sstat err" id="authErr" hidden></div>
           <p class="help">로그인하면 내역이 서버에 안전하게 저장되고, 배우자와 실시간으로 함께 볼 수 있어요. 휴대폰을 바꿔도 내역이 그대로예요.</p>
           <button type="button" class="gbtn" id="gLogin"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 2.9-2.2 5.4-4.7 7.1l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.5z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>구글로 로그인</button>
-          <p class="help" style="margin-top:14px"><b>구글 로그인이 잘 안 될 때</b> · 구글 계정 이메일과 <b>앱용 비밀번호</b>로도 로그인할 수 있어요. 비밀번호는 구글로 로그인된 사파리나 PC에서 <b>4. 함께 쓰기 → 앱용 비밀번호</b>로 먼저 만들어 주세요.</p>
+          <p class="help" style="margin-top:14px"><b>구글 로그인이 잘 안 될 때</b> · 구글 계정 이메일과 <b>앱용 비밀번호</b>로도 로그인할 수 있어요. 비밀번호는 구글로 로그인된 브라우저(사파리·크롬)나 PC에서 <b>4. 함께 쓰기 → 앱용 비밀번호</b>로 먼저 만들어 주세요.</p>
           <form class="pwgrid" id="pwLoginForm">
             <div><input class="f" id="pwEmail" type="email" placeholder="구글 계정 이메일" autocomplete="username" aria-label="이메일" enterkeyhint="next"></div>
             <div><input class="f" id="pwPass" type="password" placeholder="앱용 비밀번호" autocomplete="current-password" aria-label="앱용 비밀번호" enterkeyhint="go"></div>
@@ -790,8 +811,8 @@ html.locked .wrap{visibility:hidden}
           <div class="zoomrow"><span>작게</span><input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="확대"><span>크게</span></div>
           <div class="row-btns"><button type="button" id="cropCancel">취소</button><button type="button" class="pri" id="cropApply">적용</button></div>
         </div>
-        <p class="iconwarn standalone-only" id="iconStandalone" hidden>지금은 <b>홈 화면 앱</b>으로 열려 있어요. 여기서 바꾼 아이콘은 앱을 지우면 같이 사라져서 적용되지 않아요. <b>사파리</b>에서 바꿔 주세요.</p>
-        <p class="iconwarn" id="iconWarn">변경 후 홈 화면 설치를 다시 진행하셔야 합니다.<br>① <b>사파리</b>에서 이 주소를 열고 로그인 → ② 여기서 아이콘 바꾸기 → ③ 홈 화면의 가계부 아이콘 삭제 → ④ 사파리에서 공유 → "홈 화면에 추가"<br><span class="cond">단, 구글 로그인 연동이 되어 있지 않은 경우 기존 내역이 삭제될 수 있어요. 먼저 4. 함께 쓰기에서 로그인하거나 7. 백업을 해 주세요.</span></p>
+        <p class="iconwarn standalone-only" id="iconStandalone" hidden>지금은 <b>홈 화면 앱</b>으로 열려 있어요. 여기서 바꾼 아이콘은 앱을 지우면 같이 사라져서 적용되지 않아요. <b class="os-ios">사파리</b><b class="os-android">크롬</b>에서 바꿔 주세요.</p>
+        <p class="iconwarn" id="iconWarn">변경 후 홈 화면 설치를 다시 진행하셔야 합니다.<br><span class="os-ios">① <b>사파리</b>에서 이 주소를 열고 로그인 → ② 여기서 아이콘 바꾸기 → ③ 홈 화면의 가계부 아이콘 삭제 → ④ 사파리에서 공유 → "홈 화면에 추가"<br></span><span class="os-android">① <b>크롬</b>에서 이 주소를 열고 로그인 → ② 여기서 아이콘 바꾸기 → ③ 홈 화면의 가계부 앱 삭제 → ④ 크롬 오른쪽 위 ⋮ → "홈 화면에 추가"<br>갤럭시는 휴대폰에 따라 바꾼 아이콘 대신 기본 복주머니 아이콘으로 설치될 수 있어요.<br></span><span class="cond">단, 구글 로그인 연동이 되어 있지 않은 경우 기존 내역이 삭제될 수 있어요. 먼저 4. 함께 쓰기에서 로그인하거나 7. 백업을 해 주세요.</span></p>
       </div>
     </details>
 
@@ -1024,7 +1045,18 @@ html.locked .wrap{visibility:hidden}
     document.documentElement.setAttribute("data-accent",accent);
     try{ localStorage.setItem("gagyebu.accent",accent); }catch(e){}
     document.querySelectorAll(".sw").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.id===accent)));
+    syncBarColor();
   }
+  // 휴대폰 위·아래 막대 색을 앱 배경색과 맞추기 (갤럭시 상태 표시줄 등)
+  function syncBarColor(){
+    try{
+      const c=getComputedStyle(document.body).backgroundColor; if(!c) return;
+      let m=document.querySelector('meta[name="theme-color"]');
+      if(!m){ m=document.createElement("meta"); m.name="theme-color"; document.head.appendChild(m); }
+      m.setAttribute("content",c); m.removeAttribute("media");
+    }catch(e){}
+  }
+  try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",syncBarColor); }catch(e){}
   let lastGroup="";
   THEMES.forEach(t=>{
     if(t.g!==lastGroup){ lastGroup=t.g; $("swatches").appendChild(el("div","sw-group",t.g)); }
@@ -1186,6 +1218,9 @@ html.locked .wrap{visibility:hidden}
     const rest=t.slice(dm.index+dm[0].length).split("\n");
     let place=clean(rest[0]);
     if(!place){ place=rest.slice(1).map(clean).find(s=>s&&!/채널|카카오톡|마케팅/.test(s))||""; }
+    // 카톡 알림톡처럼 "가맹점: 스타벅스" 형태로 오는 경우
+    const lab=/(?:이용\s*가맹점|가맹점\s*명?|사용처|이용처|결제처)\s*[:：]?\s*([^\n]+)/.exec(t);
+    if(lab&&clean(lab[1])) place=clean(lab[1]);
     const head=t.slice(0,dm.index).trim()||t.split("\n")[0];
     let company=""; for(const c of COMPANIES){ if(c.k.some(k=>head.toUpperCase().includes(k.toUpperCase()))){ company=c.n; break; } }
     const l4=/(?:^|[^\d,*])(\d{4})(?![\d,])/.exec(head);
@@ -2547,7 +2582,7 @@ html.locked .wrap{visibility:hidden}
     setLink("icon",iconCfg.s180,"image/png");
     try{
       const m={name:"우리집 가계부",short_name:"가계부",lang:"ko",start_url:location.origin+location.pathname,scope:location.origin+"/",display:"standalone",
-        background_color:"#eef8f4",theme_color:"#d6342c",icons:[{src:iconCfg.s512||iconCfg.s180,sizes:"512x512",type:"image/png",purpose:"any"}]};
+        background_color:"#eef8f4",theme_color:"#eef8f4",icons:[{src:iconCfg.s512||iconCfg.s180,sizes:"512x512",type:"image/png",purpose:"any"}]};
       if(manifestUrl) URL.revokeObjectURL(manifestUrl);
       manifestUrl=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));
       setLink("manifest",manifestUrl);
@@ -2762,7 +2797,8 @@ html.locked .wrap{visibility:hidden}
   const PUSH_FN=SB_URL+"/functions/v1/push-inbox";
   const pushOK=()=>("serviceWorker" in navigator)&&("PushManager" in window)&&("Notification" in window);
   const isStandalone=()=>window.navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
-  const isIOS=()=>/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  const isIOS=()=>document.documentElement.getAttribute("data-os")==="ios";
+  const isAndroid=()=>document.documentElement.getAttribute("data-os")==="android";
   async function getPushSub(){ try{ const reg=await navigator.serviceWorker.getRegistration(); return reg&&reg.pushManager?await reg.pushManager.getSubscription():null; }catch(e){ return null; } }
   function keyBytes(b64){ const s=atob(b64.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((b64.length+3)%4)); return Uint8Array.from(s,c=>c.charCodeAt(0)); }
   async function saveSub(sub){
@@ -2775,13 +2811,19 @@ html.locked .wrap{visibility:hidden}
     const show=(isOn,btn,msg)=>{ st.textContent=isOn?"ON":"OFF"; st.classList.toggle("on",isOn); on.hidden=btn!=="on"; off.hidden=btn!=="off"; help.textContent=msg; };
     if(!pushOK()){
       if(isIOS()&&!isStandalone()) return show(false,"","홈 화면에 설치한 가계부 앱에서 켤 수 있어요. 홈 화면의 가계부 아이콘으로 열어서 여기서 '알림 켜기'를 눌러 주세요.");
-      return show(false,"","이 기기에서는 알림을 쓸 수 없어요. 아이폰은 iOS 16.4 이상, 홈 화면 앱에서 쓸 수 있어요.");
+      if(isAndroid()) return show(false,"","이 브라우저에서는 알림을 쓸 수 없어요. 크롬으로 열거나 홈 화면에 설치한 가계부 앱에서 켜 주세요.");
+      return show(false,"","이 기기에서는 알림을 쓸 수 없어요. 아이폰은 iOS 16.4 이상 홈 화면 앱, 갤럭시는 크롬에서 쓸 수 있어요.");
     }
-    if(Notification.permission==="denied") return show(false,"","알림이 꺼져 있어요. 아이폰 설정 → 알림 → 가계부에서 '알림 허용'을 켠 다음 다시 눌러 주세요.");
+    if(Notification.permission==="denied") return show(false,"",isAndroid()
+      ?"알림이 꺼져 있어요. 휴대폰 설정 → 애플리케이션 → 가계부(또는 Chrome) → 알림에서 허용한 다음 다시 눌러 주세요."
+      :isIOS()?"알림이 꺼져 있어요. 아이폰 설정 → 알림 → 가계부에서 '알림 허용'을 켠 다음 다시 눌러 주세요."
+      :"알림이 꺼져 있어요. 브라우저 주소창 왼쪽의 사이트 설정에서 알림을 허용해 주세요.");
     const sub=await getPushSub();
     if(sub&&Notification.permission==="granted"){
       if(resync) saveSub(sub).catch(()=>{});
-      return show(true,"off","새 승인 문자가 들어오면 알림이 뜨고, 앱 아이콘에 확인할 개수가 숫자로 보여요. 이 휴대폰에만 적용돼요.");
+      return show(true,"off",isAndroid()
+        ?"새 승인내역이 들어오면 알림이 뜨고, 앱 아이콘에 알림 점(배지)이 표시돼요. 이 휴대폰에만 적용돼요."
+        :"새 승인내역이 들어오면 알림이 뜨고, 앱 아이콘에 확인할 개수가 숫자로 보여요. 이 휴대폰에만 적용돼요.");
     }
     show(false,"on","켜 두면 앱을 열지 않아도 새 승인내역이 들어온 걸 알림과 아이콘 숫자로 알 수 있어요.");
   }
@@ -2815,9 +2857,12 @@ html.locked .wrap{visibility:hidden}
   async function loadKey(reset){
     const r=await sb.rpc("get_push_key",{p_reset:!!reset});
     if(r.error){ toast(errMsg(r.error)); return false; }
-    pushKey=r.data; $("kvUrl").textContent=RPC_URL; $("kvApi").textContent=SB_KEY; $("kvKey").textContent=pushKey;
+    pushKey=r.data; $("kvUrl").textContent=RPC_URL; $("kvUrl2").textContent=SB_URL+"/rest/v1/rpc/push_sms"; $("kvApi").textContent=SB_KEY; $("kvKey").textContent=pushKey;
     return true;
   }
+  function setAutoView(v){ $("autoInfo").dataset.v=v; document.querySelectorAll("#autoInfo .ostabs button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v))); }
+  document.querySelectorAll("#autoInfo .ostabs button").forEach(b=>b.addEventListener("click",()=>setAutoView(b.dataset.v)));
+  setAutoView(document.documentElement.getAttribute("data-os")==="android"?"android":"ios");
   $("autoShow").addEventListener("click",async()=>{
     const B=$("autoInfo");
     if(!B.hidden){ B.hidden=true; return; }
@@ -2830,7 +2875,7 @@ html.locked .wrap{visibility:hidden}
   $("autoResetNo").addEventListener("click",()=>{ $("autoResetConfirm").hidden=true; });
   $("autoResetYes").addEventListener("click",async()=>{
     $("autoResetConfirm").hidden=true;
-    if(await loadKey(true)) toast("새 연결 키를 만들었어요. 단축어의 p_key를 바꿔 주세요");
+    if(await loadKey(true)) toast("새 연결 키를 만들었어요. 단축어나 MacroDroid의 연결 키를 바꿔 주세요");
   });
   document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{
     const t=$(b.dataset.copy).textContent;
@@ -2875,7 +2920,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-03";
+  var APP_VERSION="2026.11.12-04";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
@@ -2883,7 +2928,7 @@ html.locked .wrap{visibility:hidden}
   }
   function check(){
     fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
-      if(j&&j.version&&j.version!==APP_VERSION){
+      if(j&&j.version&&j.version>APP_VERSION){
         document.getElementById("updMsg").textContent="새 버전이 나왔어요"+(j.note?" ("+j.note+")":"")+". 새로고침하면 바로 적용돼요.";
         bar.hidden=false;
       }
