@@ -336,6 +336,8 @@ html[data-os="other"] b.os-android::before{content:"·"}
 .ostabs button{flex:1;height:30px;border:1px solid var(--line);background:var(--field);border-radius:8px;font-size:12.5px;color:var(--muted)}
 .ostabs button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-text);border-color:transparent;font-weight:700}
 #autoInfo[data-v="ios"] .v-android, #autoInfo[data-v="android"] .v-ios{display:none}
+#autoInfo[data-v=""] > :not(.ostabs):not(.ospick){display:none}
+#autoInfo:not([data-v=""]) .ospick{display:none}
 .pushbox{margin-top:12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--field)}
 .pushrow{display:flex;align-items:center;gap:6px;font-size:13px}
 .pushrow .sp{flex:1}
@@ -679,13 +681,14 @@ html.locked .wrap{visibility:hidden}
           <div class="row-btns" style="justify-content:flex-end;margin-top:10px"><button type="button" id="cfCancel" hidden>취소</button><button type="submit" class="pri" id="cfSave">카드 등록</button></div>
         </form>
         <h3 class="lfh subh">2. 카드 승인 문자 자동 입력</h3>
-        <p class="help" id="autoOff">4. 함께 쓰기에서 로그인하면 쓸 수 있어요. 카드 승인 문자가 오면 휴대폰 자동화(아이폰 단축어 · 갤럭시 MacroDroid)가 가계부 알림함으로 보내줘요.</p>
+        <p class="help" id="autoOff">4. 함께 쓰기에서 로그인하면 쓸 수 있어요. 카드 승인 문자가 오면 휴대폰 자동화(아이폰 단축어 · 안드로이드 MacroDroid)가 가계부 알림함으로 보내줘요.</p>
         <div id="autoOn" hidden>
           <p class="help os-ios">카드 승인 <b>문자(SMS)</b>가 오면 아이폰 <b>단축어</b>가 가계부 <b>📥 카드 알림</b>으로 보내요. 내역 탭에서 확인하고 추가하면 돼요. 아이폰은 카톡 알림을 자동으로 읽을 수 없어서, 카톡 알림톡은 <b>문자 붙여넣기</b>를 써 주세요.</p>
           <p class="help os-android">카드 승인 <b>문자</b>와 <b>카톡 알림톡</b>이 오면 자동화 앱 <b>MacroDroid</b>가 가계부 <b>📥 카드 알림</b>으로 보내요. 내역 탭에서 확인하고 추가하면 돼요.</p>
           <div class="row-btns"><button type="button" id="autoShow">연결 정보 · 설정 방법</button><button type="button" id="autoTest">테스트 알림 보내기</button></div>
-          <div id="autoInfo" hidden data-v="ios">
-            <div class="ostabs" role="group" aria-label="휴대폰 종류"><button type="button" data-v="ios">아이폰</button><button type="button" data-v="android">갤럭시·안드로이드</button></div>
+          <div id="autoInfo" hidden data-v="">
+            <p class="help ospick" style="margin:8px 0 0">사용하는 휴대폰을 골라 주세요.</p>
+            <div class="ostabs" role="group" aria-label="휴대폰 종류"><button type="button" data-v="ios">아이폰</button><button type="button" data-v="android">안드로이드</button></div>
             <div class="kv v-ios"><span>주소 (URL)</span><code id="kvUrl"></code><button type="button" class="sbtn" data-copy="kvUrl">복사</button></div>
             <div class="kv v-android"><span>주소 (URL)</span><code id="kvUrl2"></code><button type="button" class="sbtn" data-copy="kvUrl2">복사</button></div>
             <div class="kv"><span>헤더 apikey</span><code id="kvApi"></code><button type="button" class="sbtn" data-copy="kvApi">복사</button></div>
@@ -697,7 +700,7 @@ html.locked .wrap{visibility:hidden}
               <li>액션 <b>+</b> → <b>웹 상호작용(Web Interactions)</b> → <b>HTTP 요청(HTTP Request)</b> → 방법 <b>POST</b>, URL에 위의 <b>주소</b> 붙여넣기</li>
               <li><b>헤더(Headers)</b> 2개 추가: <code>apikey</code> = 위의 <b>헤더 apikey</b>, <code>x-key</code> = <b>내 연결 키</b></li>
               <li><b>본문(Body)</b>: 콘텐츠 유형 <code>text/plain</code>, 내용은 매직 텍스트 <b>[notification]</b>(알림 내용) 넣기</li>
-              <li>매크로 이름을 <b>가계부</b>로 저장 · 갤럭시 <b>설정 → 애플리케이션 → MacroDroid → 배터리 → 제한 없음</b>으로 바꿔야 잠들지 않아요</li>
+              <li>매크로 이름을 <b>가계부</b>로 저장 · 안드로이드 <b>설정 → 애플리케이션 → MacroDroid → 배터리 → 제한 없음</b>으로 바꿔야 잠들지 않아요</li>
               <li>완료 · 이제 승인 문자나 카톡이 오면 <b>📥 카드 알림</b>에 들어와요 (Supabase SQL 8단계가 필요해요)</li>
             </ol>
             <ol class="steps v-ios">
@@ -812,7 +815,7 @@ html.locked .wrap{visibility:hidden}
           <div class="row-btns"><button type="button" id="cropCancel">취소</button><button type="button" class="pri" id="cropApply">적용</button></div>
         </div>
         <p class="iconwarn standalone-only" id="iconStandalone" hidden>지금은 <b>홈 화면 앱</b>으로 열려 있어요. 여기서 바꾼 아이콘은 앱을 지우면 같이 사라져서 적용되지 않아요. <b class="os-ios">사파리</b><b class="os-android">크롬</b>에서 바꿔 주세요.</p>
-        <p class="iconwarn" id="iconWarn">변경 후 홈 화면 설치를 다시 진행하셔야 합니다.<br><span class="os-ios">① <b>사파리</b>에서 이 주소를 열고 로그인 → ② 여기서 아이콘 바꾸기 → ③ 홈 화면의 가계부 아이콘 삭제 → ④ 사파리에서 공유 → "홈 화면에 추가"<br></span><span class="os-android">① <b>크롬</b>에서 이 주소를 열고 로그인 → ② 여기서 아이콘 바꾸기 → ③ 홈 화면의 가계부 앱 삭제 → ④ 크롬 오른쪽 위 ⋮ → "홈 화면에 추가"<br>갤럭시는 휴대폰에 따라 바꾼 아이콘 대신 기본 복주머니 아이콘으로 설치될 수 있어요.<br></span><span class="cond">단, 구글 로그인 연동이 되어 있지 않은 경우 기존 내역이 삭제될 수 있어요. 먼저 4. 함께 쓰기에서 로그인하거나 7. 백업을 해 주세요.</span></p>
+        <p class="iconwarn" id="iconWarn">변경 후 홈 화면 설치를 다시 진행하셔야 합니다.<br><span class="os-ios">① <b>사파리</b>에서 이 주소를 열고 로그인 → ② 여기서 아이콘 바꾸기 → ③ 홈 화면의 가계부 아이콘 삭제 → ④ 사파리에서 공유 → "홈 화면에 추가"<br></span><span class="os-android">① <b>크롬</b>에서 이 주소를 열고 로그인 → ② 여기서 아이콘 바꾸기 → ③ 홈 화면의 가계부 앱 삭제 → ④ 크롬 오른쪽 위 ⋮ → "홈 화면에 추가"<br>안드로이드는 휴대폰에 따라 바꾼 아이콘 대신 기본 복주머니 아이콘으로 설치될 수 있어요.<br></span><span class="cond">단, 구글 로그인 연동이 되어 있지 않은 경우 기존 내역이 삭제될 수 있어요. 먼저 4. 함께 쓰기에서 로그인하거나 7. 백업을 해 주세요.</span></p>
       </div>
     </details>
 
@@ -849,7 +852,7 @@ html.locked .wrap{visibility:hidden}
           <div class="row-btns" style="margin-top:6px"><button type="button" id="pasteBackupBtn">붙여 넣은 내용 불러오기</button></div>
         </div>
         <h3 class="lfh" style="margin-top:14px">휴대폰에 앱처럼 설치하기</h3>
-        <p class="help"><b>아이폰</b> · 사파리로 열기 → 아래 공유 버튼 → "홈 화면에 추가"<br><b>갤럭시</b> · 크롬으로 열기 → 오른쪽 위 ⋮ → "홈 화면에 추가"<br>카톡에서 링크를 열었다면 먼저 "다른 브라우저로 열기"를 눌러 주세요.</p>
+        <p class="help"><b>아이폰</b> · 사파리로 열기 → 아래 공유 버튼 → "홈 화면에 추가"<br><b>안드로이드</b> · 크롬으로 열기 → 오른쪽 위 ⋮ → "홈 화면에 추가"<br>카톡에서 링크를 열었다면 먼저 "다른 브라우저로 열기"를 눌러 주세요.</p>
         <p class="help" style="margin:0">새 버전이 나오면 화면 아래에 안내가 떠요. <b>새로고침</b>을 누르면 바로 적용되고, 입력한 내역은 그대로 남아요.</p>
       </div>
     </details>
@@ -2812,7 +2815,7 @@ html.locked .wrap{visibility:hidden}
     if(!pushOK()){
       if(isIOS()&&!isStandalone()) return show(false,"","홈 화면에 설치한 가계부 앱에서 켤 수 있어요. 홈 화면의 가계부 아이콘으로 열어서 여기서 '알림 켜기'를 눌러 주세요.");
       if(isAndroid()) return show(false,"","이 브라우저에서는 알림을 쓸 수 없어요. 크롬으로 열거나 홈 화면에 설치한 가계부 앱에서 켜 주세요.");
-      return show(false,"","이 기기에서는 알림을 쓸 수 없어요. 아이폰은 iOS 16.4 이상 홈 화면 앱, 갤럭시는 크롬에서 쓸 수 있어요.");
+      return show(false,"","이 기기에서는 알림을 쓸 수 없어요. 아이폰은 iOS 16.4 이상 홈 화면 앱, 안드로이드는 크롬에서 쓸 수 있어요.");
     }
     if(Notification.permission==="denied") return show(false,"",isAndroid()
       ?"알림이 꺼져 있어요. 휴대폰 설정 → 애플리케이션 → 가계부(또는 Chrome) → 알림에서 허용한 다음 다시 눌러 주세요."
@@ -2862,11 +2865,10 @@ html.locked .wrap{visibility:hidden}
   }
   function setAutoView(v){ $("autoInfo").dataset.v=v; document.querySelectorAll("#autoInfo .ostabs button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v))); }
   document.querySelectorAll("#autoInfo .ostabs button").forEach(b=>b.addEventListener("click",()=>setAutoView(b.dataset.v)));
-  setAutoView(document.documentElement.getAttribute("data-os")==="android"?"android":"ios");
   $("autoShow").addEventListener("click",async()=>{
     const B=$("autoInfo");
     if(!B.hidden){ B.hidden=true; return; }
-    if(await loadKey(false)) B.hidden=false;
+    if(await loadKey(false)){ setAutoView(""); B.hidden=false; }
   });
   $("autoReset").addEventListener("click",async()=>{
     if(!$("autoResetConfirm").hidden){ return; }
@@ -2920,7 +2922,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-04";
+  var APP_VERSION="2026.11.12-06";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
