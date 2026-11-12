@@ -125,6 +125,17 @@ button{cursor:pointer;font-size:13px}
 .r2{display:grid;grid-template-columns:1.3fr 1fr;grid-auto-flow:column;grid-auto-columns:auto;gap:5px;align-items:start}
 .insrow{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;background:var(--accent-soft);border-radius:8px;padding:5px 5px 5px 10px}
 .insrow span{font-size:12px;font-weight:600;color:var(--accent-text)}
+.insrow span small{display:block;font-size:10.5px;font-weight:400;opacity:.8}
+.xtras{display:flex;gap:6px}
+.xchip{border:1px dashed var(--line);background:transparent;color:var(--muted);border-radius:99px;padding:2px 10px;font-size:11.5px}
+.xchip[aria-expanded="true"]{border-style:solid;border-color:transparent;background:var(--accent-soft);color:var(--accent-text);font-weight:700}
+.backin{display:grid;grid-template-columns:1fr auto auto;gap:4px;align-items:center}
+.xmini{height:28px;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:0 8px;font-size:11.5px;color:var(--ink)}
+.memorow>div{display:grid}
+.c-amt small.bk{color:var(--card)}
+.c-meta .memo{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.c-place .memo-d{font-size:11px;color:var(--muted);margin-left:6px}
+@media (max-width:600px){ .c-place .memo-d{display:none} }
 .datebox{position:relative;box-sizing:border-box;height:var(--h);border:1px solid var(--line);border-radius:8px;background:var(--field);
   display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;cursor:pointer}
 .datebox input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;margin:0;padding:0;font-size:16px;-webkit-appearance:none;appearance:none;cursor:pointer}
@@ -614,6 +625,17 @@ html.locked .wrap{visibility:hidden}
           <span>보험금 받은 금액</span>
           <div><input class="f" id="ins" inputmode="numeric" placeholder="0" aria-label="보험금 받은 금액" enterkeyhint="done"></div>
         </div>
+        <div class="xtras" id="xtras">
+          <button type="button" class="xchip" id="backTgl" aria-expanded="false">＋ 더치페이</button>
+          <button type="button" class="xchip" id="memoTgl" aria-expanded="false">＋ 메모</button>
+        </div>
+        <div class="insrow backrow" id="backRow" hidden>
+          <span>더치페이</span>
+          <div class="backin"><input class="f" id="back" inputmode="numeric" placeholder="0" aria-label="돌려받은 금액" enterkeyhint="done"><button type="button" class="xmini" id="backHalf">반반</button><button type="button" class="xmini" id="backAll">전액</button></div>
+        </div>
+        <div class="memorow" id="memoRow" hidden>
+          <div><input class="f" id="memo" maxlength="60" placeholder="메모 (예: 민지랑 더치페이, 생일선물)" aria-label="메모" enterkeyhint="done"></div>
+        </div>
       </div>
       <p class="note" id="note" hidden></p>
     </form>
@@ -1025,7 +1047,7 @@ html.locked .wrap{visibility:hidden}
       outbox=loadJSON(OUTBOX+me)||[];
     }
   })();
-  const net=e=>Math.max(0,e.amount-(e.ins||0));
+  const net=e=>Math.max(0,e.amount-(e.ins||0)-(e.back||0));
   const byAdded=(a,b)=>(b.created||0)-(a.created||0);
   const byDateAsc=(a,b)=>a.date===b.date?(a.created||0)-(b.created||0):(a.date<b.date?-1:1);
   const byNewest=(a,b)=>a.date===b.date?(b.created||0)-(a.created||0):(a.date<b.date?1:-1);
@@ -1136,10 +1158,10 @@ html.locked .wrap{visibility:hidden}
   function refreshSelects(){ fillCatSelect(sel); fillCatSelect($("ruleCat")); updateIns(); }
 
   /* ---------- form fields ---------- */
-  const amountEl=$("amount"), insEl=$("ins");
+  const amountEl=$("amount"), insEl=$("ins"), backEl=$("back"), memoEl=$("memo");
   const getNum=inp=>parseInt(inp.value.replace(/[^0-9]/g,""),10)||0;
   const setNum=(inp,n)=>{inp.value=n?won(n):"";};
-  [amountEl,insEl].forEach(inp=>inp.addEventListener("input",()=>setNum(inp,Math.min(getNum(inp),999999999))));
+  [amountEl,insEl,backEl].forEach(inp=>inp.addEventListener("input",()=>setNum(inp,Math.min(getNum(inp),999999999))));
 
   function fmtDate(d,withYear){
     const dt=new Date(d+"T00:00:00");
@@ -1185,6 +1207,14 @@ html.locked .wrap{visibility:hidden}
   function applyCardGuess(){ if(cardTouched||editingId) return; cardSel=guessCard($("place").value); updatePayLabel(); }
 
   function note(msg,kind){const n=$("note");n.textContent=msg||"";n.hidden=!msg;n.className="note"+(kind?" "+kind:"");}
+  function showX(which,on){
+    const row=$(which+"Row"), t=$(which+"Tgl"); row.hidden=!on; t.setAttribute("aria-expanded",String(on));
+    t.textContent=(on?"− ":"＋ ")+(which==="back"?"더치페이":"메모");
+  }
+  $("backTgl").addEventListener("click",()=>{ const on=$("backRow").hidden; showX("back",on); if(on) backEl.focus(); else setNum(backEl,0); });
+  $("memoTgl").addEventListener("click",()=>{ const on=$("memoRow").hidden; showX("memo",on); if(on) memoEl.focus(); else memoEl.value=""; });
+  $("backHalf").addEventListener("click",()=>{ const a=getNum(amountEl); if(!a){ toast("금액을 먼저 넣어 주세요"); amountEl.focus(); return; } setNum(backEl,Math.floor(a/2)); });
+  $("backAll").addEventListener("click",()=>{ const a=getNum(amountEl); if(!a){ toast("금액을 먼저 넣어 주세요"); amountEl.focus(); return; } setNum(backEl,a-(insCat&&sel.value===insCat?getNum(insEl):0)); });
   function updateIns(){ const on=!!insCat&&sel.value===insCat; $("insRow").hidden=!on; if(!on) insEl.value=""; }
 
   function guessCat(place){
@@ -1341,8 +1371,11 @@ html.locked .wrap{visibility:hidden}
     const pb=el("span","pay "+e.pay,e.pay==="card"?(cardName(e.card)||"카드"):"현금"), py=el("span","c-pay"); py.appendChild(pb);
     const a=el("span","c-amt num",won(net(e)));
     if(e.ins) a.appendChild(el("small",null,"보험 −"+won(e.ins)));
+    if(e.back) a.appendChild(el("small","bk","돌려받음 −"+won(e.back)));
+    if(e.memo){ p.appendChild(el("span","memo-d",e.memo)); p.title=e.memo; }
     const meta=el("span","c-meta");
     meta.append(el("span","num",fmtDate(e.date,withYear)),tg.cloneNode(true),pb.cloneNode(true));
+    if(e.memo) meta.appendChild(el("span","memo","· "+e.memo));
     const ops=el("span","ops");
     const eb=el("button"); eb.type="button"; eb.innerHTML=ICON_EDIT; eb.setAttribute("aria-label","수정"); eb.addEventListener("click",()=>startEdit(e.id));
     const db=el("button"); db.type="button"; db.innerHTML=ICON_DEL; db.setAttribute("aria-label","삭제"); db.addEventListener("click",()=>{confirmId=confirmId===e.id?null:e.id;render();});
@@ -1371,7 +1404,7 @@ html.locked .wrap{visibility:hidden}
     m=/^\d+$/.exec(s); return m?s:null;
   }
   function matchEntry(e,q){
-    if(textMatch(e.place,q)||textMatch(e.cat,q)) return true;
+    if(textMatch(e.place,q)||textMatch(e.cat,q)||(e.memo&&textMatch(e.memo,q))) return true;
     const c=e.pay==="card"?cardOf(e.card):null;
     if(c&&(textMatch(c.alias,q)||textMatch(c.company,q))) return true;
     const mq=moneyQuery(q);
@@ -1749,7 +1782,7 @@ html.locked .wrap{visibility:hidden}
   /* ---------- form submit / edit ---------- */
   function resetForm(){
     editingId=null; catTouched=false;
-    setDate(todayStr()); $("place").value=""; setNum(amountEl,0); setNum(insEl,0); sel.value=""; cardSel=defaultCard(); cardTouched=false; setPay("card"); closeCardMenu(); priv=false; updatePriv();
+    setDate(todayStr()); $("place").value=""; setNum(amountEl,0); setNum(insEl,0); setNum(backEl,0); memoEl.value=""; showX("back",false); showX("memo",false); sel.value=""; cardSel=defaultCard(); cardTouched=false; setPay("card"); closeCardMenu(); priv=false; updatePriv();
     $("formTitle").textContent="사용내역 입력"; $("addBtn").textContent="추가"; $("cancelEdit").hidden=true; $("clearBtn").hidden=false;
     $("form").classList.remove("editing"); note(""); updateIns();
   }
@@ -1758,6 +1791,7 @@ html.locked .wrap{visibility:hidden}
     editingId=id; confirmId=null; catTouched=true; $("pasteBox").hidden=true;
     setDate(e.date); $("place").value=e.place; setNum(amountEl,e.amount); sel.value=cats.includes(e.cat)?e.cat:""; cardSel=e.card||null; cardTouched=true; setPay(e.pay); priv=!!e.private; updatePriv();
     updateIns(); setNum(insEl,e.ins||0);
+    setNum(backEl,e.back||0); showX("back",!!e.back); memoEl.value=e.memo||""; showX("memo",!!e.memo);
     $("formTitle").textContent="사용내역 수정"; $("addBtn").textContent="수정"; $("cancelEdit").hidden=false; $("clearBtn").hidden=true;
     $("form").classList.add("editing");
     note(insCat&&e.cat===insCat?"실손보험금을 받았다면 보험금 칸에 넣고 수정을 눌러 주세요.":"고친 뒤 수정을 눌러 주세요.");
@@ -1768,16 +1802,18 @@ html.locked .wrap{visibility:hidden}
     ev.preventDefault();
     const amount=getNum(amountEl), place=$("place").value.trim(), cat=sel.value, date=$("date").value||todayStr();
     const ins=insCat&&cat===insCat?getNum(insEl):0;
+    const back=$("backRow").hidden?0:getNum(backEl), memo=$("memoRow").hidden?"":memoEl.value.trim().slice(0,60);
     if(!amount){note("금액을 입력해 주세요.","err");amountEl.focus();return;}
     if(!cat){note("카테고리를 선택해 주세요.","err");sel.focus();return;}
     if(ins>amount){note("보험금이 병원비보다 클 수 없어요.","err");insEl.focus();return;}
+    if(ins+back>amount){note("돌려받은 돈이 쓴 금액보다 클 수 없어요.","err");backEl.focus();return;}
     let saved=null;
     if(editingId){
       saved=entries.find(x=>x.id===editingId)||null;
-      if(saved){ delete saved.synced; Object.assign(saved,{date,place,amount,cat,pay}); if(pay==="card"&&cardSel) saved.card=cardSel; else delete saved.card; if(ins) saved.ins=ins; else delete saved.ins; if(priv) saved.private=true; else delete saved.private; }
+      if(saved){ delete saved.synced; Object.assign(saved,{date,place,amount,cat,pay}); if(pay==="card"&&cardSel) saved.card=cardSel; else delete saved.card; if(ins) saved.ins=ins; else delete saved.ins; if(back) saved.back=back; else delete saved.back; if(memo) saved.memo=memo; else delete saved.memo; if(priv) saved.private=true; else delete saved.private; }
       toast("수정했어요");
     } else {
-      saved={id:newId(),date,place,amount,cat,pay,created:Date.now()}; if(pay==="card"&&cardSel) saved.card=cardSel; if(ins) saved.ins=ins; if(priv) saved.private=true; if(cloudOn) saved.uid=me;
+      saved={id:newId(),date,place,amount,cat,pay,created:Date.now()}; if(pay==="card"&&cardSel) saved.card=cardSel; if(ins) saved.ins=ins; if(back) saved.back=back; if(memo) saved.memo=memo; if(priv) saved.private=true; if(cloudOn) saved.uid=me;
       entries.push(saved); toast(won(amount)+"원 추가했어요");
     }
     if(saved) commitEntry(saved); else persist();
@@ -1877,9 +1913,9 @@ html.locked .wrap{visibility:hidden}
   $("backupBtn").addEventListener("click",()=>offer("가계부백업_"+stamp()+".json",backupJson()));
   $("csvBtn").addEventListener("click",()=>{
     const esc=s=>'"'+String(s).replace(/"/g,'""')+'"';
-    const rows=[["사용일","사용처","카테고리","결제","금액","보험금","실제부담"]].concat(
+    const rows=[["사용일","사용처","카테고리","결제","금액","보험금","돌려받은 돈","실제부담","메모"]].concat(
       ownEntries().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.created-b.created)
-        .map(e=>[e.date,e.place,e.cat,e.pay==="card"?(cardName(e.card)||"카드"):"현금",e.amount,e.ins||0,net(e)]));
+        .map(e=>[e.date,e.place,e.cat,e.pay==="card"?(cardName(e.card)||"카드"):"현금",e.amount,e.ins||0,e.back||0,net(e),e.memo||""]));
     offer("가계부_"+stamp()+".csv","\uFEFF"+rows.map(r=>r.map(esc).join(",")).join("\r\n"));
   });
   $("copyBtn").addEventListener("click",()=>{const ta=$("fallbackText");navigator.clipboard.writeText(ta.value).then(()=>toast("복사했어요"),()=>{ta.focus();ta.select();toast("선택된 내용을 복사해 주세요");});});
@@ -1896,6 +1932,8 @@ html.locked .wrap{visibility:hidden}
         const ne={id,date:e.date,place:String(e.place??e.memo??"").slice(0,40),amount:Math.max(0,Math.round(e.amount)),
           cat,pay:e.pay==="cash"?"cash":"card",created:Number(e.created)||Date.now()};
         if(Number(e.ins)>0) ne.ins=Math.min(ne.amount,Math.round(Number(e.ins)));
+        if(Number(e.back)>0) ne.back=Math.min(ne.amount-(ne.ins||0),Math.round(Number(e.back)));
+        if(typeof e.memo==="string"&&e.memo&&e.place!=null) ne.memo=e.memo.slice(0,60);
         if(typeof e.card==="string"&&e.card) ne.card=e.card;
         if(cloudOn) ne.uid=me;
         entries.push(ne); if(cloudOn) queue({t:"up",row:toRow(ne)}); ids.add(id); added++;
@@ -1914,13 +1952,14 @@ html.locked .wrap{visibility:hidden}
 
 
   /* ---------- 함께 쓰기 (Supabase) ---------- */
+  let bmNoCol=false;
   let sb=null, channel=null, live=false, syncErr="", flushing=false, cloudReady=false, starting=false, signedIn=false;
   let myEmail="", otpEmail="", joinArmed=false, logoutArmed=false;
-  const toRow=e=>({id:e.id,user_id:me,date:e.date,place:e.place||"",amount:e.amount,ins:e.ins||0,cat:e.cat,pay:e.pay,card:e.card||null,
+  const toRow=e=>({id:e.id,user_id:me,date:e.date,place:e.place||"",amount:e.amount,ins:e.ins||0,back:e.back||0,memo:e.memo||"",cat:e.cat,pay:e.pay,card:e.card||null,
     private:!!e.private,created:e.created||Date.now(),updated_at:new Date().toISOString()});
   function fromRow(r){
     const e={id:r.id,uid:r.user_id,date:String(r.date).slice(0,10),place:r.place||"",amount:r.amount,cat:r.cat,pay:r.pay,created:Number(r.created)||0};
-    if(r.ins) e.ins=r.ins; if(r.private) e.private=true; if(r.card) e.card=r.card; return e;
+    if(r.ins) e.ins=r.ins; if(r.back) e.back=r.back; if(r.memo) e.memo=r.memo; if(r.private) e.private=true; if(r.card) e.card=r.card; return e;
   }
   function errMsg(err){
     const m=String((err&&(err.message||err.error_description))||err||"");
@@ -1951,7 +1990,13 @@ html.locked .wrap{visibility:hidden}
     try{
       while(outbox.length){
         const op=outbox[0]; let r=null;
-        if(op.t==="up") r=await sb.from("entries").upsert(op.row);
+        if(op.t==="up"){
+          r=await sb.from("entries").upsert(op.row);
+          if(r.error&&/back|memo/i.test(r.error.message||"")&&/column|schema cache/i.test(r.error.message||"")){
+            if(!bmNoCol) toast("메모·돌려받은 돈을 서버에 저장하려면 Supabase SQL 9단계를 실행해 주세요"); bmNoCol=true;
+            const row=Object.assign({},op.row); delete row.back; delete row.memo; r=await sb.from("entries").upsert(row);
+          }
+        }
         else if(op.t==="del") r=await sb.from("entries").delete().eq("id",op.id);
         else if(op.t==="rules") r=await sb.from("user_settings").upsert({user_id:me,rules:op.rules,updated_at:new Date().toISOString()});
         else if(op.t==="grp"&&hh){
@@ -3003,7 +3048,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-15";
+  var APP_VERSION="2026.11.13-03";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
