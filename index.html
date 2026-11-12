@@ -145,7 +145,13 @@ button{cursor:pointer;font-size:13px}
 .chips{display:flex;gap:5px}
 .chips button{border:1px solid var(--line);background:transparent;border-radius:99px;padding:2px 10px;font-size:12px;color:var(--muted)}
 .chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.calbtn{border:1px solid var(--line);background:var(--field);border-radius:99px;padding:2px 10px;font-size:12px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.calbtn{border:1px solid var(--line);background:var(--field);border-radius:99px;padding:2px 9px;font-size:12px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.lright{display:flex;gap:5px;align-items:center;flex:none}
+.whosw{display:inline-flex;align-items:center;gap:5px;border:0;background:var(--accent-soft);color:var(--accent-text);border-radius:99px;padding:3px 9px 3px 10px;font-size:12px;font-weight:700;white-space:nowrap;max-width:96px}
+.whosw b{overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.whosw .dots{display:inline-flex;gap:2px}
+.whosw .dots i{width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.3}
+.whosw .dots i.on{opacity:1}
 .calbtn svg{width:13px;height:13px}
 .sbox{position:relative}
 .sbox .ico{position:absolute;left:9px;top:calc(var(--h) / 2);transform:translateY(-50%);width:14px;height:14px;color:var(--muted);pointer-events:none;z-index:1}
@@ -191,7 +197,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 
 /* calendar */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-bottom:8px}
-.cal .dow{font-size:11px;text-align:center;color:var(--muted);padding:2px 0}
+.cal .dow{font-size:11px;text-align:center;color:var(--muted);padding:3px 0 4px;position:sticky;top:0;z-index:2;background:var(--surface);box-shadow:0 0 0 2px var(--surface)}
 .cal .sun,.cal .sun .dn{color:var(--danger)}
 .cal .sat,.cal .sat .dn{color:var(--card)}
 .cal .day{border:0;background:var(--field);border-radius:8px;min-height:50px;padding:4px 1px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
@@ -200,6 +206,10 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .cal .day.spent{background:var(--accent-soft)}
 .cal .day.today{box-shadow:inset 0 0 0 1.5px var(--accent-text)}
 .cal .day.sel{background:var(--accent)}
+.cal .caldet{grid-column:1/-1;background:var(--surface);border:1.5px solid var(--accent);border-radius:10px;padding:2px 10px 4px;margin:2px 0 4px;animation:caldetIn .18s ease-out}
+.cal .caldet .lrow:last-child{border-bottom:0}
+.caldet-h{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--accent-text);padding:7px 2px 5px;border-bottom:1px solid var(--line)}
+@keyframes caldetIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .cal .day.sel .dn,.cal .day.sel .dv{color:var(--accent-ink)}
 .hint{color:var(--muted);text-align:center;padding:10px 4px;font-size:12px}
 
@@ -582,14 +592,16 @@ html.locked .wrap{visibility:hidden}
     </section>
 
     <section class="panel" id="listPanel">
-      <div class="whobar" id="whoBar" hidden></div>
       <div class="lbar">
         <div class="chips" id="filterbar">
           <button type="button" data-f="all" aria-pressed="true">전체</button>
           <span class="fwrap"><button type="button" data-f="card" aria-pressed="false" id="cardOnlyBtn">카드만</button><div class="cardmenu" id="cfMenu" hidden></div></span>
           <button type="button" data-f="cash" aria-pressed="false">현금만</button>
         </div>
-        <button type="button" class="calbtn" id="calBtn"></button>
+        <div class="lright">
+          <button type="button" class="whosw" id="whoSw" hidden aria-label="누구 내역 볼지 바꾸기"></button>
+          <button type="button" class="calbtn" id="calBtn"></button>
+        </div>
       </div>
       <div class="cardchips" id="cardChips" hidden></div>
       <div class="sbox">
@@ -1074,7 +1086,7 @@ html.locked .wrap{visibility:hidden}
   /* ---------- state ---------- */
   let view=(()=>{const d=new Date();return{y:d.getFullYear(),m:d.getMonth()+1};})();
   let pay="card", editingId=null, confirmId=null, filter="all", tab="list", catTouched=false;
-  let listMode="list", selDay=null, query="", priv=false, who="me", statsWho="me", searchYear="all", sugOpen=false, filterCard="all", cardScope="month";
+  let listMode="list", selDay=null, query="", priv=false, who=(function(){ try{ return localStorage.getItem("gagyebu.who")||"me"; }catch(e){ return "me"; } })(), statsWho="me", searchYear="all", sugOpen=false, filterCard="all", cardScope="month";
   let statsMode="month", weekScope="month", openStat=null, statsGroup="grp";
   let grpEdit=null, grpSel=[], grpNoCol=false;
   let catEdit=null, catConfirm=null, ruleEdit=null;
@@ -1335,15 +1347,17 @@ html.locked .wrap{visibility:hidden}
 
   function renderList(all){
     document.querySelectorAll("#filterbar button[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.f===filter)));
-    $("calBtn").innerHTML=(listMode==="cal"?ICON_LIST+"목록으로 보기":ICON_CAL+"달력으로 보기");
+    $("calBtn").innerHTML=(listMode==="cal"?ICON_LIST+"목록":ICON_CAL+"달력");
     $("qClr").hidden=!query;
-    const W=$("whoBar"); W.innerHTML=""; W.hidden=!partnered();
+    const W=$("whoSw"); W.innerHTML=""; W.hidden=!partnered();
     if(partnered()){
       if(who!=="me"&&who!=="all"&&!members.some(m=>m.user_id===who)) who="me";
-      [["me","나"],...members.filter(m=>m.user_id!==me).map(m=>[m.user_id,m.display_name]),["all","함께"]].forEach(([k,t])=>{
-        const b=el("button",null,t); b.type="button"; b.setAttribute("aria-pressed",String(who===k));
-        b.addEventListener("click",()=>{who=k;confirmId=null;render();}); W.appendChild(b);
-      });
+      const opts=[["me","나"],...members.filter(m=>m.user_id!==me).map(m=>[m.user_id,m.display_name||"배우자"]),["all","함께"]];
+      const i=Math.max(0,opts.findIndex(o=>o[0]===who));
+      W.appendChild(el("b",null,opts[i][1]));
+      const dots=el("span","dots"); opts.forEach((o,j)=>dots.appendChild(el("i",j===i?"on":null))); W.appendChild(dots);
+      W.title="누르면 "+opts[(i+1)%opts.length][1]+"(으)로 바뀌어요";
+      W.onclick=()=>{ who=opts[(i+1)%opts.length][0]; try{ localStorage.setItem("gagyebu.who",who); }catch(e){} confirmId=null; render(); };
     }
     const CC=$("cardChips"); CC.innerHTML=""; CC.hidden=true;
     if(filter==="card"){
@@ -1381,7 +1395,7 @@ html.locked .wrap{visibility:hidden}
 
   const fmtShort=n=>n>=100000?(Math.round(n/1000)/10)+"만":won(n);
   function renderCal(list){
-    const box=$("calBox"); box.innerHTML="";
+    const box=$("calBox"); box.innerHTML=""; box.style.paddingBottom="";
     const byDay={}; list.forEach(e=>{byDay[e.date]=(byDay[e.date]||0)+net(e);});
     const grid=el("div","cal");
     WEEK.forEach((w,i)=>grid.appendChild(el("div","dow"+(i===0?" sun":i===6?" sat":""),w)));
@@ -1392,17 +1406,33 @@ html.locked .wrap{visibility:hidden}
       const b=el("button","day"+(wd===0?" sun":wd===6?" sat":"")+(v?" spent":"")+(ds===today?" today":"")+(ds===selDay?" sel":""));
       b.type="button"; b.setAttribute("aria-label",view.m+"월 "+d+"일 "+(v?won(v)+"원":"지출 없음"));
       b.append(el("span","dn",String(d)),el("span","dv",v?fmtShort(v):""));
-      b.addEventListener("click",()=>{ selDay=selDay===ds?null:ds; if(selDay&&!editingId) setDate(ds); render(); });
+      b.addEventListener("click",()=>{ selDay=selDay===ds?null:ds; if(selDay&&!editingId) setDate(ds); calScrollReq=!!selDay; render(); });
       grid.appendChild(b);
+      // 고른 날이 있는 주의 마지막 칸 뒤에 그날 내역을 펼쳐요
+      const weekEnd=wd===6||d===days;
+      if(weekEnd&&selDay&&selDay.startsWith(monthPrefix())){
+        const sd=+selDay.slice(8,10), swd=(first+sd-1)%7, wStart=sd-swd, wEnd=sd+(6-swd);
+        if(d>=wStart&&d<=wEnd&&d<=days&&d>=sd) grid.appendChild(calDetail(list));
+      }
     }
     box.appendChild(grid);
-    const L=$("lscroll"), S=$("lsum");
-    if(selDay&&selDay.startsWith(monthPrefix())){
-      const dl=list.filter(e=>e.date===selDay).sort(byAdded);
-      S.hidden=false; S.append(el("span",null,fmtDate(selDay)+" · "+dl.length+"건"),el("span",null,won(sum(dl))+"원"));
-      if(dl.length) dl.forEach(e=>L.appendChild(rowEl(e,false)));
-      else L.appendChild(el("div","hint","이날 내역이 없어요. 위 입력칸 날짜가 이날로 바뀌었어요."));
-    } else L.appendChild(el("div","hint","날짜를 누르면 그날 내역이 보이고, 입력칸 날짜도 그날로 바뀌어요."));
+    const L=$("lscroll");
+    if(!(selDay&&selDay.startsWith(monthPrefix()))) L.appendChild(el("div","hint","날짜를 누르면 그 주 아래에 그날 내역이 펼쳐지고, 입력칸 날짜도 그날로 바뀌어요."));
+    if(calScrollReq){ calScrollReq=false; requestAnimationFrame(()=>{
+      const det=box.querySelector(".caldet"), selB=box.querySelector(".day.sel"), lb=$("lbody"); if(!det||!selB||!lb) return;
+      const lr=lb.getBoundingClientRect(), dr=det.getBoundingClientRect(), sr=selB.getBoundingClientRect();
+      if(dr.bottom>lr.bottom-4){ const by=Math.min(dr.bottom-lr.bottom+10, sr.top-lr.top-((box.querySelector(".dow")||{}).offsetHeight||0)-3);
+        if(by>0){ const room=lb.scrollHeight-lb.clientHeight-lb.scrollTop; if(by>room) box.style.paddingBottom=Math.ceil(by-room)+"px"; lb.scrollBy({top:by,behavior:"smooth"}); } }
+    }); }
+  }
+  let calScrollReq=false;
+  function calDetail(list){
+    const dl=list.filter(e=>e.date===selDay).sort(byAdded);
+    const det=el("div","caldet");
+    const hd=el("div","caldet-h"); hd.append(el("span",null,fmtDate(selDay)+" · "+dl.length+"건"),el("span","num",won(sum(dl))+"원")); det.appendChild(hd);
+    if(dl.length) dl.forEach(e=>det.appendChild(rowEl(e,false)));
+    else det.appendChild(el("div","hint","이날 내역이 없어요. 위 입력칸 날짜가 이날로 바뀌었어요."));
+    return det;
   }
 
   /* ---------- stats ---------- */
@@ -2898,7 +2928,7 @@ html.locked .wrap{visibility:hidden}
     setTimeout(()=>{ try{ const sc=t==="list"?$("lbody"):$("tab-"+t); if(sc) sc.scrollTop=0; }catch(e){} },0);
     try{
       if(t==="list"){
-        filter="all"; filterCard="all"; who="me"; listMode="list"; selDay=null; query=""; searchYear="all"; $("q").value="";
+        filter="all"; filterCard="all"; listMode="list"; selDay=null; query=""; searchYear="all"; $("q").value="";
         inboxOpen=false; $("cfMenu").hidden=true; confirmId=null; $("lbody").scrollTop=0;
       } else if(t==="stats"){
         statsMode="month"; statsWho="me"; openStat=null; weekScope="month"; cardScope="month"; statsGroup="grp"; $("tab-stats").scrollTop=0;
@@ -2940,7 +2970,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.12-08";
+  var APP_VERSION="2026.11.12-11";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
