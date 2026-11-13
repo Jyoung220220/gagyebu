@@ -133,6 +133,7 @@ button{cursor:pointer;font-size:13px}
 .xmini{height:28px;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:0 8px;font-size:11.5px;color:var(--ink)}
 .memorow>div{display:grid}
 .c-amt small.bk{color:var(--card)}
+.c-amt.neg{color:var(--card)}
 .c-meta .memo{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
 .c-place .memo-d{font-size:11px;color:var(--muted);margin-left:6px}
 @media (max-width:600px){ .c-place .memo-d{display:none} }
@@ -1047,7 +1048,7 @@ html.locked .wrap{visibility:hidden}
       outbox=loadJSON(OUTBOX+me)||[];
     }
   })();
-  const net=e=>Math.max(0,e.amount-(e.ins||0)-(e.back||0));
+  const net=e=>Math.max(0,e.amount-(e.ins||0))-(e.back||0);
   const byAdded=(a,b)=>(b.created||0)-(a.created||0);
   const byDateAsc=(a,b)=>a.date===b.date?(a.created||0)-(b.created||0):(a.date<b.date?-1:1);
   const byNewest=(a,b)=>a.date===b.date?(b.created||0)-(a.created||0):(a.date<b.date?1:-1);
@@ -1371,9 +1372,9 @@ html.locked .wrap{visibility:hidden}
     p.appendChild(document.createTextNode(e.place||"(사용처 없음)"));
     const tg=el("span","tag",e.cat), c=el("span","c-cat"); c.appendChild(tg);
     const pb=el("span","pay "+e.pay,e.pay==="card"?(cardName(e.card)||"카드"):"현금"), py=el("span","c-pay"); py.appendChild(pb);
-    const a=el("span","c-amt num",won(net(e)));
+    const a=el("span","c-amt num"+(net(e)<0?" neg":""),won(net(e)));
     if(e.ins) a.appendChild(el("small",null,"보험 −"+won(e.ins)));
-    if(e.back) a.appendChild(el("small","bk","돌려받음 −"+won(e.back)));
+    if(e.back) a.appendChild(el("small","bk","더치페이 +"+won(e.back)));
     if(e.memo){ p.appendChild(el("span","memo-d",e.memo)); p.title=e.memo; }
     const meta=el("span","c-meta");
     meta.append(el("span","num",fmtDate(e.date,withYear)),tg.cloneNode(true),pb.cloneNode(true));
@@ -1548,8 +1549,8 @@ html.locked .wrap{visibility:hidden}
       const open=openStat===r.cat;
       const row=el("button","srow"+(i===0?" top1":"")+(open?" open":"")); row.type="button"; row.setAttribute("aria-expanded",String(open));
       const bar=el("div","sbar"); bar.style.width=Math.max(4,r.sum/max*100)+"%";
-      if(r.card){const c=el("i","card");c.style.width=(r.card/(r.sum||1)*100)+"%";bar.appendChild(c);}
-      if(r.cash){const c=el("i","cash");c.style.width=(r.cash/(r.sum||1)*100)+"%";bar.appendChild(c);}
+      if(r.card>0){const c=el("i","card");c.style.width=Math.min(100,r.card/(Math.max(0,r.card)+Math.max(0,r.cash)||1)*100)+"%";bar.appendChild(c);}
+      if(r.cash>0){const c=el("i","cash");c.style.width=Math.min(100,r.cash/(Math.max(0,r.card)+Math.max(0,r.cash)||1)*100)+"%";bar.appendChild(c);}
       const bw=el("div"); bw.appendChild(bar);
       bw.appendChild(el("small","split num",r.grp?r.grp.cats.join("+"):[r.card?"카드 "+won(r.card):"",r.cash?"현금 "+won(r.cash):""].filter(Boolean).join(" · ")));
       const am=el("span","samt num",won(r.sum)+"원"); am.appendChild(el("small",null,Math.round(r.sum/(total||1)*100)+"% · "+r.n+"건"));
@@ -1587,7 +1588,7 @@ html.locked .wrap{visibility:hidden}
     const max=Math.max(...sums)||1;
     [1,2,3,4,5,6,0].forEach(w=>{
       const row=el("div","wrow");
-      const bw=el("div"); const bar=el("div","wbar"); bar.style.width=(sums[w]/max*100)+"%"; if(!sums[w]) bar.style.opacity=".25"; bw.appendChild(bar);
+      const bw=el("div"); const bar=el("div","wbar"); bar.style.width=Math.max(0,sums[w]/max*100)+"%"; if(sums[w]<=0) bar.style.opacity=".25"; bw.appendChild(bar);
       const am=el("span","samt num",won(sums[w])+"원"); am.appendChild(el("small",null,cnt[w]+"건"));
       row.append(el("span","wd"+(w===0?" sun":w===6?" sat":""),WEEK[w]),bw,am);
       S.appendChild(row);
@@ -1808,7 +1809,6 @@ html.locked .wrap{visibility:hidden}
     if(!amount){note("금액을 입력해 주세요.","err");amountEl.focus();return;}
     if(!cat){note("카테고리를 선택해 주세요.","err");sel.focus();return;}
     if(ins>amount){note("보험금이 병원비보다 클 수 없어요.","err");insEl.focus();return;}
-    if(ins+back>amount){note("돌려받은 돈이 쓴 금액보다 클 수 없어요.","err");backEl.focus();return;}
     let saved=null;
     if(editingId){
       saved=entries.find(x=>x.id===editingId)||null;
@@ -1934,7 +1934,7 @@ html.locked .wrap{visibility:hidden}
         const ne={id,date:e.date,place:String(e.place??e.memo??"").slice(0,40),amount:Math.max(0,Math.round(e.amount)),
           cat,pay:e.pay==="cash"?"cash":"card",created:Number(e.created)||Date.now()};
         if(Number(e.ins)>0) ne.ins=Math.min(ne.amount,Math.round(Number(e.ins)));
-        if(Number(e.back)>0) ne.back=Math.min(ne.amount-(ne.ins||0),Math.round(Number(e.back)));
+        if(Number(e.back)>0) ne.back=Math.min(999999999,Math.round(Number(e.back)));
         if(typeof e.memo==="string"&&e.memo&&e.place!=null) ne.memo=e.memo.slice(0,60);
         if(typeof e.card==="string"&&e.card) ne.card=e.card;
         if(cloudOn) ne.uid=me;
@@ -3053,7 +3053,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.13-04";
+  var APP_VERSION="2026.11.13-06";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
