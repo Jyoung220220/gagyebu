@@ -1277,6 +1277,7 @@ html.locked .wrap{visibility:hidden}
   $("sugg").addEventListener("mousedown",ev=>ev.preventDefault());
 
   /* ---------- card text paste ---------- */
+  function isAdText(t){ return /[(\[]\s*광고\s*[)\]]/.test(t||"")||/수신\s*거부/.test(t||""); }
   function parseCardText(t){
     t=String(t||"").replace(/\r/g,"");
     if(!t.trim()) return null;
@@ -1307,6 +1308,7 @@ html.locked .wrap{visibility:hidden}
   function doParse(){
     const ta=$("pasteText"), r=parseCardText(ta.value);
     if(!ta.value.trim()) return;
+    if(isAdText(ta.value)){ note("광고 문자예요. 카드 승인 문자를 붙여 넣어 주세요.","err"); return; }
     if(!r){ note("문자에서 금액과 날짜를 찾지 못했어요. 문자 전체를 붙여 넣어 주세요.","err"); return; }
     if(r.cancel){ note("승인취소 문자예요. 예전 내역을 찾아 지워 주세요.","err"); return; }
     resetForm();
@@ -2781,6 +2783,9 @@ html.locked .wrap{visibility:hidden}
     inboxReady=true;
     const before=new Set(inbox.map(x=>x.id));
     inbox=r.data||[];
+    // 카드사 광고 문자는 알림함에서 바로 지워요
+    const ads=inbox.filter(x=>isAdText(x.text));
+    if(ads.length){ inbox=inbox.filter(x=>!isAdText(x.text)); ads.forEach(x=>{ sb.from("inbox").delete().eq("id",x.id).then(()=>{},()=>{}); }); }
     const fresh=inbox.filter(x=>!before.has(x.id)).length;
     if(fresh&&before.size>=0&&inboxSeen) toast("카드 알림 "+fresh+"건이 들어왔어요");
     inboxSeen=true;
@@ -3048,7 +3053,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.13-03";
+  var APP_VERSION="2026.11.13-04";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
