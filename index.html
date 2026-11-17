@@ -132,6 +132,7 @@ button{cursor:pointer;font-size:13px}
 .backin{display:grid;grid-template-columns:1fr auto auto;gap:4px;align-items:center}
 .xmini{height:28px;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:0 8px;font-size:11.5px;color:var(--ink)}
 .memorow>div{display:grid}
+.bmwarn{margin:0;font-size:11.5px;color:var(--danger);line-height:1.45}
 .c-amt small.bk{color:var(--card)}
 .c-amt.neg{color:var(--card)}
 .c-meta .memo{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
@@ -634,6 +635,7 @@ html.locked .wrap{visibility:hidden}
           <span>더치페이</span>
           <div class="backin"><input class="f" id="back" inputmode="numeric" placeholder="0" aria-label="돌려받은 금액" enterkeyhint="done"><button type="button" class="xmini" id="backHalf">반반</button><button type="button" class="xmini" id="backAll">전액</button></div>
         </div>
+        <p class="bmwarn" id="bmWarn" hidden>메모·더치페이는 아직 이 휴대폰에만 저장돼요. 서버에 저장하려면 Supabase에서 <b>SQL 9단계</b>를 실행해 주세요.</p>
         <div class="memorow" id="memoRow" hidden>
           <div><input class="f" id="memo" maxlength="60" placeholder="메모 (예: 민지랑 더치페이, 생일선물)" aria-label="메모" enterkeyhint="done"></div>
         </div>
@@ -1959,6 +1961,13 @@ html.locked .wrap{visibility:hidden}
   let myEmail="", otpEmail="", joinArmed=false, logoutArmed=false;
   const toRow=e=>({id:e.id,user_id:me,date:e.date,place:e.place||"",amount:e.amount,ins:e.ins||0,back:e.back||0,memo:e.memo||"",cat:e.cat,pay:e.pay,card:e.card||null,
     private:!!e.private,created:e.created||Date.now(),updated_at:new Date().toISOString()});
+  // 서버에 메모·더치페이 칸이 아직 없으면(SQL 9단계 전) 이 휴대폰에 있는 값을 지키기
+  function keepLocalExtras(n,r){
+    if(r&&("back" in r)&&("memo" in r)) return n;
+    const old=entries.find(e=>e.id===n.id);
+    if(old){ if(old.back) n.back=old.back; if(old.memo) n.memo=old.memo; }
+    return n;
+  }
   function fromRow(r){
     const e={id:r.id,uid:r.user_id,date:String(r.date).slice(0,10),place:r.place||"",amount:r.amount,cat:r.cat,pay:r.pay,created:Number(r.created)||0};
     if(r.ins) e.ins=r.ins; if(r.back) e.back=r.back; if(r.memo) e.memo=r.memo; if(r.private) e.private=true; if(r.card) e.card=r.card; return e;
@@ -1995,7 +2004,7 @@ html.locked .wrap{visibility:hidden}
         if(op.t==="up"){
           r=await sb.from("entries").upsert(op.row);
           if(r.error&&/back|memo/i.test(r.error.message||"")&&/column|schema cache/i.test(r.error.message||"")){
-            if(!bmNoCol) toast("메모·돌려받은 돈을 서버에 저장하려면 Supabase SQL 9단계를 실행해 주세요"); bmNoCol=true;
+            if(!bmNoCol) toast("메모·더치페이를 서버에 저장하려면 Supabase SQL 9단계를 실행해 주세요"); bmNoCol=true; $("bmWarn").hidden=false;
             const row=Object.assign({},op.row); delete row.back; delete row.memo; r=await sb.from("entries").upsert(row);
           }
         }
@@ -2051,7 +2060,9 @@ html.locked .wrap{visibility:hidden}
       if(h.data){ hh=h.data; applyHH(); }
       members=m.data||[];
       if(s.data&&Array.isArray(s.data.rules)&&!outbox.some(o=>o.t==="rules")) rules=s.data.rules.filter(r=>r&&r.kw);
-      let list=rows.map(fromRow);
+      let list=rows.map(r=>keepLocalExtras(fromRow(r),r));
+      if(rows.length&&!("back" in rows[0])) bmNoCol=true;
+      $("bmWarn").hidden=!bmNoCol;
       outbox.forEach(op=>{
         if(op.t==="up"){ const n=fromRow(op.row); const i=list.findIndex(e=>e.id===n.id); if(i>=0) list[i]=n; else list.push(n); }
         else if(op.t==="del") list=list.filter(e=>e.id!==op.id);
@@ -2069,7 +2080,7 @@ html.locked .wrap{visibility:hidden}
     const id=p.eventType==="DELETE"?(p.old&&p.old.id):(p.new&&p.new.id);
     if(!id||outbox.some(o=>(o.t==="up"&&o.row.id===id)||(o.t==="del"&&o.id===id))) return;
     if(p.eventType==="DELETE") entries=entries.filter(e=>e.id!==id);
-    else{ const n=fromRow(p.new); const i=entries.findIndex(e=>e.id===id); if(i>=0) entries[i]=n; else entries.push(n); }
+    else{ const n=keepLocalExtras(fromRow(p.new),p.new); const i=entries.findIndex(e=>e.id===id); if(i>=0) entries[i]=n; else entries.push(n); }
     persist(); afterRemote();
   }
   function subscribe(){
@@ -3053,7 +3064,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.13-06";
+  var APP_VERSION="2026.11.17-01";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
