@@ -1300,11 +1300,23 @@ html.locked .wrap{visibility:hidden}
     const rest=t.slice(dm.index+dm[0].length).split("\n");
     let place=clean(rest[0]);
     if(!place){ place=rest.slice(1).map(clean).find(s=>s&&!/채널|카카오톡|마케팅/.test(s))||""; }
+    // "가맹점 → 금액 승인 → 이름·카드 → 날짜" 순서로 오는 문자: 날짜 앞쪽 줄에서 가맹점 찾기
+    if(!place){
+      const pre=t.slice(0,dm.index).split("\n").map(s=>s.trim()).filter(Boolean);
+      const cand=pre.find(s=>!/web\s*발신|^\[[^\]]*\]$|승인|취소|[0-9][0-9,]*\s*원|\*|카드|일시불|할부|누적|체크|신용/i.test(s));
+      if(cand) place=clean(cand);
+    }
     // 카톡 알림톡처럼 "가맹점: 스타벅스" 형태로 오는 경우
     const lab=/(?:이용\s*가맹점|가맹점\s*명?|사용처|이용처|결제처)\s*[:：]?\s*([^\n]+)/.exec(t);
     if(lab&&clean(lab[1])) place=clean(lab[1]);
-    const head=t.slice(0,dm.index).trim()||t.split("\n")[0];
-    let company=""; for(const c of COMPANIES){ if(c.k.some(k=>head.toUpperCase().includes(k.toUpperCase()))){ company=c.n; break; } }
+    // 카드사 찾기: 가맹점 이름(예: 삼성화재, 현대해상)에 든 글자는 빼고 찾아요
+    let head=t.slice(0,dm.index).trim()||t.split("\n")[0];
+    if(place) head=head.split(place).join(" ");
+    head=head.replace(/삼성(화재|생명|전자|증권|물산|웰스토리|디지털프라자|서울병원|SDS)|현대(해상|백화점|자동차|오일뱅크|홈쇼핑|그린푸드|아울렛)|롯데(마트|백화점|시네마|월드|리아|하이마트|홈쇼핑|칠성|온|슈퍼|아울렛)|신한(라이프|투자)|KB(손해보험|손보|생명|증권)|하나(로마트|투어)|농협(하나로|생명|손해)/g," ");
+    const HU=head.toUpperCase();
+    let company="";
+    if(/LOCA|로카/.test(HU)) company="롯데카드";
+    if(!company) for(const c of COMPANIES){ if(c.k.some(k=>HU.includes(k.toUpperCase()))){ company=c.n; break; } }
     const l4=/(?:^|[^\d,*])(\d{4})(?![\d,])/.exec(head);
     return {date:y+"-"+pad(mo)+"-"+pad(da),place:place.slice(0,40),amount,cancel,company,last4:l4?l4[1]:"",time:dm[3]?pad(dm[3])+":"+dm[4]:""};
   }
@@ -3064,7 +3076,7 @@ html.locked .wrap{visibility:hidden}
 </div>
 <script>
 (function(){
-  var APP_VERSION="2026.11.17-01";
+  var APP_VERSION="2026.11.19-01";
   var bar=document.getElementById("updBar");
   var reg=null;
   if("serviceWorker" in navigator){
